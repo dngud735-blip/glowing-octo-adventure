@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>PVC Mesh Cutting Calculator</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <link href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css)" rel="stylesheet">
+    <!-- Tailwind CSS & FontAwesome 직접 연결 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('[https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap](https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap)');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         
         :root {
             --primary: #2563eb;
@@ -175,12 +175,12 @@
     <div id="toast"></div>
 
     <div class="app-container">
-        <!-- 상단 바 -->
-        <div class="bg-slate-900 text-white flex items-center justify-center font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
-            <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
+        <!-- 타이틀 바 -->
+        <div class="bg-slate-900 text-white flex items-center justify-center font-black uppercase text-[11px] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
+            <span class="leading-none transform translate-y-[1px] tracking-widest">PVC Mesh Cutting Calculator</span>
         </div>
 
-        <!-- 사진 분석 섹션 -->
+        <!-- 사진 분석 버튼 영역 -->
         <div class="bg-white border-x border-slate-100 p-3 flex flex-col gap-2 shadow-sm">
             <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
             <button id="photoBtn" onclick="document.getElementById('photoInput').click(); haptic(15);" class="w-full h-12 bg-blue-600 text-white flex items-center justify-center gap-3 font-black rounded-xl shadow-md active:scale-95 transition-all text-sm uppercase">
@@ -191,7 +191,7 @@
             <!-- 로딩 상태 -->
             <div id="aiLoading" class="hidden flex items-center justify-center p-4 bg-slate-50 rounded-xl border border-dashed border-blue-200">
                 <span class="loader mr-3"></span>
-                <span id="loadingTxt" class="text-sm font-bold text-slate-600">AI가 데이터를 읽고 있습니다...</span>
+                <span id="loadingTxt" class="text-sm font-bold text-slate-600">데이터를 분석하고 있습니다...</span>
             </div>
 
             <!-- 추출 리스트 -->
@@ -204,7 +204,7 @@
             </div>
         </div>
 
-        <!-- 메인 입력부 -->
+        <!-- 입력부 -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
@@ -234,16 +234,16 @@
             </div>
 
             <div class="grid grid-cols-4 gap-x-2.5">
-                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 tracking-tighter font-black" style="border: 1px solid #d1d5db; border-radius: 0px;">RESET</button>
-                <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-[0.98] font-black uppercase" style="border-radius: 0px;">GENERATE PLAN</button>
+                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 border border-slate-200 font-black">RESET</button>
+                <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase">GENERATE PLAN</button>
             </div>
         </main>
 
         <!-- 히스토리 -->
         <footer id="historySection" class="w-full">
             <div class="flex items-center justify-between px-1 cursor-pointer py-4" onclick="toggleHistory()">
-                <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3"><i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500 transition-transform"></i> History</h2>
-                <button onclick="confirmClearAll(event)" class="text-sm font-black text-red-400 uppercase px-3">Clear All</button>
+                <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3"><i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500"></i> History</h2>
+                <button onclick="confirmClearAll()" class="text-sm font-black text-red-400 uppercase px-3">Clear All</button>
             </div>
             <div id="historyList" class="hidden space-y-4 px-1 pb-4"></div>
         </footer>
@@ -252,11 +252,24 @@
         <div id="resultArea" class="hidden space-y-[40px] w-full pt-6">
             <section id="summaryCardContainer" class="animate-in">
                 <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
-                    <div class="bg-slate-900 px-4 py-1.5 text-center border-b border-transparent"><h2 id="summaryCardHeader" class="text-white font-black text-lg tracking-tight"></h2></div>
+                    <div class="bg-slate-900 px-4 py-1.5 text-center"><h2 id="summaryCardHeader" class="text-white font-black text-lg"></h2></div>
                     <div class="p-2 space-y-2" id="summaryList"></div>
                 </div>
             </section>
             <div id="cardsContainer" class="space-y-[40px] pb-12 px-1 flex flex-col items-center"></div>
+        </div>
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
+            <div id="modalIcon" class="mb-4 text-4xl text-red-500"><i class="fa-solid fa-trash-can"></i></div>
+            <h3 class="text-xl font-black mb-2 text-slate-800">전체 삭제</h3>
+            <p class="text-slate-500 text-sm mb-6">기록을 모두 지우시겠습니까?</p>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('deleteModal').style.display='none'" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">취소</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-sm">삭제</button>
+            </div>
         </div>
     </div>
 
@@ -276,32 +289,24 @@
             setTimeout(() => { toast.classList.remove('show'); }, 1500);
         }
 
-        // --- 분석 로직 (강화된 JSON 파싱 및 에러 핸들링) ---
+        // --- AI 사진 분석 로직 (강화됨) ---
         async function handlePhotoUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
-            const loadingArea = document.getElementById('aiLoading');
-            const resultArea = document.getElementById('aiResultArea');
-            const photoBtn = document.getElementById('photoBtn');
-
-            loadingArea.classList.remove('hidden');
-            resultArea.classList.add('hidden');
-            photoBtn.disabled = true;
+            document.getElementById('aiLoading').classList.remove('hidden');
+            document.getElementById('aiResultArea').classList.add('hidden');
+            document.getElementById('photoBtn').disabled = true;
 
             try {
                 const base64Image = await optimizeImage(file);
                 const response = await callGeminiOCR(base64Image);
-                if (response && response.rows && response.rows.length > 0) {
-                    renderAiList(response.rows);
-                } else {
-                    showToast("표 데이터를 찾지 못했습니다.");
-                    loadingArea.classList.add('hidden');
-                }
+                if (response && response.rows) renderAiList(response.rows);
+                else throw new Error();
             } catch (err) {
-                showToast("분석에 실패했습니다. 사진을 더 밝게 찍어보세요.");
-                loadingArea.classList.add('hidden');
+                showToast("데이터 추출 실패. 선명하게 다시 찍어보세요.");
+                document.getElementById('aiLoading').classList.add('hidden');
             } finally {
-                photoBtn.disabled = false;
+                document.getElementById('photoBtn').disabled = false;
                 input.value = ''; 
             }
         }
@@ -313,7 +318,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const maxSide = 1000;
+                        const maxSide = 1024;
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > maxSide) { h *= maxSide / w; w = maxSide; } }
                         else { if (h > maxSide) { w *= maxSide / h; h = maxSide; } }
@@ -329,7 +334,7 @@
         }
 
         async function callGeminiOCR(base64Data) {
-            const prompt = "Extract cutting dimensions from the image. Columns: 'Width/가로', 'Height/세로', 'Quantity/발주수량'. Meter decimals like 1.22 -> 122cm. Respond ONLY with raw JSON: {'rows': [{'w': 100, 'h': 200, 'q': 5}]}";
+            const prompt = "Extract cutting dimensions from the image. Search for '가로(옆)', '세로(높이)', '발주수량'. Meter values to CM. Return JSON ONLY like: {'rows': [{'w': 122, 'h': 102, 'q': 53}]}";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             const resp = await fetch(url, {
@@ -339,12 +344,9 @@
             });
             if (!resp.ok) throw new Error();
             const result = await resp.json();
-            const text = result.candidates[0].content.parts[0].text;
-            
-            // AI 설명글 등 불필요한 텍스트 제거 로직
-            const cleanJson = text.match(/\{[\s\S]*\}/);
-            if (cleanJson) return JSON.parse(cleanJson[0]);
-            return null;
+            const rawText = result.candidates[0].content.parts[0].text;
+            const cleanJson = rawText.match(/\{[\s\S]*\}/); // JSON 형태만 추출
+            return JSON.parse(cleanJson[0]);
         }
 
         function renderAiList(rows) {
@@ -354,7 +356,7 @@
                 <div class="photo-row-item p-4 flex items-center justify-between border-b border-slate-100 last:border-0" onclick="applyAiRow(${r.w}, ${r.h}, ${r.q})">
                     <div class="flex items-center gap-3">
                         <span class="text-[10px] font-black text-slate-300">#${i+1}</span>
-                        <span class="text-xl font-black text-slate-900 tabular-nums">${r.w} × ${r.h}</span>
+                        <span class="text-xl font-black text-slate-800 tabular-nums">${r.w} × ${r.h}</span>
                     </div>
                     <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black text-sm">${r.q}장</span>
                 </div>
@@ -372,36 +374,27 @@
 
         function closeAiResult() { document.getElementById('aiResultArea').classList.add('hidden'); }
 
-        // --- 계산 로직 (1회 끝장 로직 포함) ---
+        // --- 계산 로직 (1회 끝장) ---
         function calculate(isFromHistory = false) {
             haptic(30); if(document.activeElement) document.activeElement.blur();
             const p1Raw = document.getElementById('p1_in').value, p2Raw = document.getElementById('p2_in').value;
             const rIn = document.getElementById('r_in').value, wIn = document.getElementById('w_in').value, hIn = document.getElementById('h_in').value, goalIn = document.getElementById('q_goal').value; 
-            if (!wIn || !hIn) return;
+            if (!wIn || !hIn) { showToast("가로, 세로 치수를 입력하세요."); return; }
             const W = parseFloat(wIn), H = parseFloat(hIn), R = rIn ? parseFloat(rIn) : H, P1_val = parseFloat(p1Raw), P2_val = parseFloat(p2Raw);
             const isGoal = (goalIn && goalIn.trim() !== "");
-            let goalN = 0, doneTotal = 0, Q = 0;
-            if (isGoal) {
-                goalN = parseFloat(goalIn);
-                doneTotal = (parseFloat(document.getElementById('q_done1').value) || 0) + (parseFloat(document.getElementById('q_done2').value) || 0) + (parseFloat(document.getElementById('q_done3').value) || 0);
-                Q = goalN - doneTotal; if (Q < 0) return;
-            }
+            let goalN = goalIn ? parseFloat(goalIn) : 0;
+            let doneTotal = (parseFloat(document.getElementById('q_done1').value) || 0) + (parseFloat(document.getElementById('q_done2').value) || 0) + (parseFloat(document.getElementById('q_done3').value) || 0);
+            let Q = goalN - doneTotal;
+
             const wasteW = (R < W) ? 99999 : (R - W), wasteH = (R < H) ? 99999 : (R - H);
             let FIX, PULL, finalWaste, fixLabel, pullLabel;
             if (wasteH <= wasteW) { FIX = H; PULL = W; finalWaste = wasteH; fixLabel = "세로"; pullLabel = "가로"; } 
             else { FIX = W; PULL = H; finalWaste = wasteW; fixLabel = "가로"; pullLabel = "세로"; }
             
-            let minCuts = 999999;
-            for (let n = 2; n <= 10; n++) {
-                let totalLen = (PULL * n) + 2; if (totalLen > 1200) continue; 
-                let totalCutCount = n + (isGoal ? Math.ceil(Q / n) : 1) + (finalWaste > 0 ? 1 : 0);
-                if (totalCutCount < minCuts) minCuts = totalCutCount;
-            }
-            
             document.getElementById('resultArea').classList.remove('hidden');
             document.getElementById('summaryCardHeader').innerHTML = `<span class="text-3xl font-black text-white leading-none pl-1">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span>`;
-            const masterWebbingStr = [!isNaN(P1_val) && P1_val <= FIX ? fmt(P1_val) : null, !isNaN(P2_val) && P2_val <= FIX ? fmt(P2_val) : null].filter(v => v !== null).join(' / ') || '-';
             
+            const masterWebbingStr = [!isNaN(P1_val) && P1_val <= FIX ? fmt(P1_val) : null, !isNaN(P2_val) && P2_val <= FIX ? fmt(P2_val) : null].filter(v => v !== null).join(' / ') || '-';
             document.getElementById('summaryList').innerHTML = `<div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between"><span class="text-[12px] font-black text-slate-400 uppercase tracking-widest leading-none">Trim</span><span class="text-2xl font-black text-slate-800 leading-none">폭 ${fmt(R)} - ${fmt(FIX)} = <span class="text-red-500">${fmt(finalWaste)}cm</span></span></div><div class="grid grid-cols-2 gap-2 mt-2"><div class="bg-violet-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-violet-400 block mb-0.5 leading-none">CENTER</span><span class="text-xl font-black text-violet-700 leading-none">${fmtSpecial(FIX/2)}</span></div><div class="bg-emerald-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-emerald-600 block mb-0.5 leading-none">3-PART</span><span class="text-xl font-black text-emerald-900 leading-none">${Math.round(FIX/3)} / ${Math.round(FIX*2/3)}</span></div><div class="bg-blue-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-blue-400 block mb-0.5 leading-none">4-PART</span><span class="text-xl font-black text-blue-600 leading-none">${fmtSpecial(FIX*0.25)} / ${fmtSpecial(FIX*0.75)}</span></div><div class="bg-amber-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-amber-600 block mb-0.5 leading-none">WEBBING</span><span class="text-xl font-black text-amber-900 leading-none">${masterWebbingStr}</span></div></div>`;
             
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
@@ -409,36 +402,29 @@
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
                 let floorB = isGoal ? Math.floor(Q / n) : 1; let remB = isGoal ? (Q % n) : 0;
                 let totalCutCount = n + (isGoal ? Math.ceil(Q / n) : 1) + (finalWaste > 0 ? 1 : 0);
-                const isRec = isGoal && (totalCutCount === minCuts);
+                const isRec = isGoal && (n >= Q);
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL * i));
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400' : 'border-slate-100'}`;
-                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} <span style="margin-left:4px;">${totalCutCount}컷</span></span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? floorB+'회' : n+'장'}</span>${isGoal && remB > 0 ? `<span class="text-2xl font-black text-blue-600">+ ${remB}장 더</span>` : ''}</div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-xl font-black uppercase tracking-tight border-2 transition-all">${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block truncate leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> - <span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> = <span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" style="font-size:1.45rem;">${c}</span>`).join('')}</div></div></div></div>`;
+                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} <span style="margin-left:4px;">${totalCutCount}컷</span></span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? floorB+'회' : n+'장'}</span>${isGoal && remB > 0 ? `<span class="text-2xl font-black text-blue-600">+ ${remB}장 더</span>` : ''}</div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-xl font-black uppercase tracking-tight border-2 transition-all">${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black border-2 border-blue-100 shadow-sm leading-none flex items-center text-center px-4">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[13px] uppercase"><span class="text-slate-500">목표</span> ${goalN} - <span class="text-slate-500">완료</span> ${doneTotal} = <span class="text-blue-500">잔여</span> ${Q}</span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black flex-1 text-center tabular-nums text-blue-600">${fmt(totalLen)}<small class="text-slate-900 text-3xl ml-1 font-black">cm</small></p></div><div class="space-y-2 pt-2 pb-5"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" style="font-size:1.45rem;">${c}</span>`).join('')}</div></div></div>`;
                 container.appendChild(card);
-                if (isGoal && n >= Q) break; // 1회 완성 시 중단
+                if (isGoal && n >= Q) break;
             }
-            if (!isFromHistory) saveToHistory(W, H, rIn ? R : '', p1Raw, p2Raw, (isGoal ? goalN : 0), doneTotal, Q, pullLabel);
+            if (!isFromHistory) saveToHistory(W, H, rIn ? R : '', P1_val, P2_val, goalN, doneTotal, Q, pullLabel);
             document.body.appendChild(document.getElementById('historySection'));
         }
 
-        // --- 기타 UI 기본 로직 ---
-        function toggleHistory() { const list = document.getElementById('historyList'); const icon = document.getElementById('historyIcon'); const isHidden = list.classList.toggle('hidden'); icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)'; haptic(15); }
-        function saveToLocal() { localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
-        function renderHistory() {
-            const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-sm">Empty History</p>'; return; }
-            list.innerHTML = historyData.map(data => {
-                const isVertical = data.pull_label === '세로'; const badgeClass = isVertical ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-100 text-slate-500 border border-slate-200';
-                return `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 history-card w-full" onclick="fillFormFromHistory(${data.id})"><div class="flex items-start justify-between"><div class="flex-1"><div class="text-3xl font-black text-slate-900 flex items-center gap-x-2 leading-none mb-3 tabular-nums"><span>${data.w_in} × ${data.h_in}</span><span class="text-blue-600 text-xl font-black ml-2">폭 ${data.r_in || '-'}</span></div><div class="mt-3"><span class="text-[17px] font-black uppercase tracking-tight tabular-nums leading-none flex items-center gap-x-2"><span class="text-slate-600">목표 ${data.q_goal || 0}</span><span class="text-blue-600">잔여 ${data.q_left || 0}</span></span></div></div></div></div>`;
-            }).join('');
-        }
-        function fillFormFromHistory(id) { const data = historyData.find(d => d.id === id); if (!data) return; haptic(25); document.getElementById('w_in').value = data.w_in; document.getElementById('h_in').value = data.h_in; document.getElementById('r_in').value = data.r_in || ''; document.getElementById('q_goal').value = data.q_goal || ''; calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
-        function confirmClearAll(event) { if(event) event.stopPropagation(); haptic(20); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-trash-can text-red-500"></i>'; document.getElementById('modalTitle').innerText = '전체 삭제'; confirmBtn.innerText = '삭제'; confirmBtn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-sm active:scale-95 shadow-md'; confirmBtn.onclick = () => { historyData = []; saveToLocal(); modal.style.display = 'none'; showToast("초기화됨"); }; modal.style.display = 'flex'; }
+        // --- 기타 로직 ---
+        function toggleHistory() { const list = document.getElementById('historyList'); const isHidden = list.classList.toggle('hidden'); haptic(15); }
+        function saveToHistory(w, h, r, p1, p2, qg, dTotal, qLeft, pLabel) { const current = { id: Date.now(), w_in: w, h_in: h, r_in: r, q_goal: qg, q_left: qLeft }; historyData.unshift(current); if (historyData.length > 20) historyData.pop(); localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
+        function renderHistory() { const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold">Empty History</p>'; return; } list.innerHTML = historyData.map(data => `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100" onclick="fillFormFromHistory(${data.id})"><div class="text-2xl font-black text-slate-900">${data.w_in} × ${data.h_in} <span class="text-blue-600 text-lg ml-2">잔여 ${data.q_left}</span></div></div>`).join(''); }
+        function fillFormFromHistory(id) { const data = historyData.find(d => d.id === id); if (!data) return; haptic(25); document.getElementById('w_in').value = data.w_in; document.getElementById('h_in').value = data.h_in; calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        function confirmClearAll() { document.getElementById('deleteModal').style.display='flex'; document.getElementById('confirmDeleteBtn').onclick = () => { historyData = []; localStorage.removeItem('pvc_mesh_calculator_history'); renderHistory(); document.getElementById('deleteModal').style.display='none'; showToast("초기화됨"); }; }
         function handleEnter(event, isLast = false) { if (event.key === 'Enter') { calculate(); if (isLast) document.activeElement.blur(); } }
         function fmt(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
         function fmtSpecial(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
-        function hideError() { document.getElementById('errorBox').classList.add('hidden'); }
-        function resetForm() { haptic(15); document.querySelectorAll('input').forEach(i => i.value = ''); hideError(); document.getElementById('resultArea').classList.add('hidden'); closeAiResult(); }
+        function resetForm() { haptic(15); document.querySelectorAll('input').forEach(i => i.value = ''); document.getElementById('resultArea').classList.add('hidden'); closeAiResult(); }
     </script>
 </body>
 </html>
+
