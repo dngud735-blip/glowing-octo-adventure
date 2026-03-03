@@ -29,7 +29,6 @@
         .app-container {
             width: 100%;
             max-width: 380px; 
-            position: relative;
         }
 
         /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
@@ -145,15 +144,13 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* 설정창 애니메이션 */
-        #keyConfigSection { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
-        #keyConfigSection.open { max-height: 200px; padding-bottom: 1rem; }
+        /* API 키 설정 창 */
+        #keyConfigArea { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
+        #keyConfigArea.open { max-height: 150px; padding-bottom: 1rem; }
 
-        /* AI 결과 서랍 */
-        #aiResultsModal { transition: opacity 0.3s ease; display: none; }
-        #aiResultsModal > div { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); transform: translateY(100%); }
-        #aiResultsModal.show { display: flex !important; opacity: 1; }
-        #aiResultsModal.show > div { transform: translateY(0); }
+        /* AI 결과 리스트 (인라인 창) */
+        #aiResultBox { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
+        #aiResultBox.open { max-height: 600px; padding-bottom: 1.5rem; }
     </style>
 </head>
 <body>
@@ -162,19 +159,19 @@
 
     <div class="app-container">
         <!-- 타이틀 바 -->
-        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700 relative">
+        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.2em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
             <div class="w-8"></div>
             <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
             <button onclick="toggleKeyConfig()" class="w-8 text-slate-400 text-sm active:scale-90"><i class="fa-solid fa-gear"></i></button>
         </div>
 
         <!-- API 키 설정 (보안용) -->
-        <div id="keyConfigSection" class="bg-slate-800 px-4">
-            <div class="pt-2">
-                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local Storage)</p>
+        <div id="keyConfigArea" class="bg-slate-800 px-4">
+            <div class="pt-3">
+                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local)</p>
                 <div class="flex gap-2">
-                    <input type="text" id="api_key_field" placeholder="AIzaSy..." class="!bg-slate-700 !text-white !h-10 !text-sm !border-none rounded-lg px-3 flex-1">
-                    <button onclick="saveApiKey()" class="bg-blue-600 text-white px-4 rounded-lg font-black text-xs h-10">SAVE</button>
+                    <input type="text" id="api_key_field" placeholder="AIzaSy..." class="!bg-slate-700 !text-white !h-9 !text-sm !border-none rounded-lg px-3 flex-1 text-left">
+                    <button onclick="saveApiKey()" class="bg-blue-600 text-white px-3 rounded-lg font-black text-[10px] h-9">SAVE</button>
                 </div>
             </div>
         </div>
@@ -192,35 +189,31 @@
             </div>
         </div>
 
-        <!-- AI 로딩/결과 -->
-        <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm">
-            <div class="flex flex-col items-center">
-                <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
-                <p class="text-white font-bold tracking-widest animate-pulse text-sm">이미지 치수 분석 중...</p>
+        <!-- AI 도구함 (타이틀과 입력섹션 사이) -->
+        <section id="aiToolbox" class="bg-slate-50 border-x border-slate-100 px-3 pt-4">
+            <div class="flex gap-2 mb-2">
+                <button onclick="document.getElementById('aiUpload').click()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition-all shadow-sm">
+                    <i class="fa-solid fa-camera-retro text-lg"></i> 사진 촬영 / 업로드 인식
+                </button>
+                <input type="file" id="aiUpload" accept="image/*" class="hidden" onchange="processAIImage(event)">
             </div>
-        </div>
 
-        <div id="aiResultsModal" class="fixed inset-0 bg-slate-900/60 z-[150] items-end justify-center backdrop-blur-sm pb-0" onclick="if(event.target===this) closeAIModal()">
-            <div class="bg-white w-full max-w-md rounded-t-[32px] pt-6 pb-10 px-5 shadow-2xl flex flex-col max-h-[85vh]">
-                <div class="flex justify-between items-center mb-6 px-1">
-                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">분석된 치수 목록</h3>
-                    <button onclick="closeAIModal()" class="text-slate-400 text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
+            <!-- AI 분석 결과 창 (인라인) -->
+            <div id="aiResultBox">
+                <div class="flex items-center justify-between px-1 mb-2">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">분석된 리스트 (터치 시 입력창으로 이동)</span>
+                    <button onclick="closeAIResultBox()" class="text-slate-300 text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <div id="aiResultsList" class="overflow-y-auto space-y-3 pb-6 flex-1 px-1"></div>
+                <div id="aiInlineList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    <!-- AI 인식 결과가 여기에 생성됨 -->
+                </div>
             </div>
-        </div>
+        </section>
 
-        <!-- 입력 섹션 -->
-        <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5 relative">
-            
-            <!-- AI 버튼 -->
-            <button onclick="document.getElementById('aiUpload').click()" class="absolute -top-4 -right-2 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl active:scale-90 transition-transform z-10 border-[3px] border-white">
-                <i class="fa-solid fa-camera"></i>
-            </button>
-            <!-- capture 속성을 제거하여 촬영/갤러리 선택 가능하게 함 -->
-            <input type="file" id="aiUpload" accept="image/*" class="hidden" onchange="processAIImage(event)">
-
-            <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center mt-2">
+        <!-- 입력 섹션 (원본 디자인 복구) -->
+        <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
+            <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
+                
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
                 <input type="number" id="p1_in" onkeydown="handleEnter(event)" class="border-amber-100">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p2_in'); i.value=''; i.focus(); haptic(10);">웨빙2</label>
@@ -288,22 +281,30 @@
         </div>
     </div>
 
+    <!-- AI 로딩 레이어 -->
+    <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm">
+        <div class="flex flex-col items-center">
+            <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
+            <p class="text-white font-bold animate-pulse text-sm">치수 분석 중...</p>
+        </div>
+    </div>
+
     <script>
         let historyData = [];
-        let storedKey = localStorage.getItem('gemini_api_key_pvc') || "";
+        let storedApiKey = localStorage.getItem('gemini_api_key_pvc') || "";
 
         window.onload = function() {
-            if (storedKey) document.getElementById('api_key_field').value = storedKey;
+            if (storedApiKey) document.getElementById('api_key_field').value = storedApiKey;
             const saved = localStorage.getItem('pvc_mesh_calculator_history');
             if (saved) { try { historyData = JSON.parse(saved); renderHistory(); } catch(e) { historyData = []; } }
         };
 
-        function toggleKeyConfig() { document.getElementById('keyConfigSection').classList.toggle('open'); }
+        function toggleKeyConfig() { document.getElementById('keyConfigArea').classList.toggle('open'); }
         function saveApiKey() {
             const val = document.getElementById('api_key_field').value.trim();
             if (!val) return;
             localStorage.setItem('gemini_api_key_pvc', val);
-            storedKey = val;
+            storedApiKey = val;
             showToast("API 키가 저장되었습니다.");
             toggleKeyConfig();
         }
@@ -315,7 +316,9 @@
             setTimeout(() => { toast.classList.remove('show'); }, 1500);
         }
 
-        // --- AI 이미지 인식 로직 ---
+        /* -----------------------------------------------------------
+           AI 이미지 분석 및 단위 보정 로직
+        ----------------------------------------------------------- */
         function compressImage(file, maxSize = 1024) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -339,7 +342,7 @@
         }
 
         async function processAIImage(event) {
-            if (!storedKey) { alert("먼저 우측 상단 톱니바퀴 버튼을 눌러 API 키를 저장해주세요!"); toggleKeyConfig(); return; }
+            if (!storedApiKey) { alert("먼저 우측 상단 톱니바퀴 버튼을 눌러 API 키를 저장해주세요!"); toggleKeyConfig(); return; }
             const file = event.target.files[0];
             if (!file) return;
             event.target.value = '';
@@ -347,13 +350,13 @@
 
             try {
                 const b64 = await compressImage(file);
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${storedKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${storedApiKey}`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [
-                            { text: "작업 지시서에서 가로(w), 세로(h), 수량(q) 정보 세트를 모두 추출해. 수량이 없으면 1. 원단폭이나 웨빙 정보는 제외해. 숫자만 JSON 배열로 응답해." },
+                            { text: "작업 지시서에서 가로(w), 세로(h), 수량(q) 정보 세트를 모두 추출해. 수량이 없으면 1. 폭이나 웨빙 정보는 제외해. 숫자만 JSON 배열로 응답해." },
                             { inlineData: { mimeType: "image/jpeg", data: b64 } }
                         ] }],
                         generationConfig: { 
@@ -369,7 +372,15 @@
                 }
                 const resJson = await response.json();
                 const list = JSON.parse(resJson.candidates[0].content.parts[0].text);
-                renderAIResults(list);
+                
+                // 단위 보정: 10 미만 숫자는 미터(m)로 판단하여 100을 곱함 (1.6 -> 160)
+                const correctedList = list.map(item => ({
+                    w: item.w < 10 ? Math.round(item.w * 100) : item.w,
+                    h: item.h < 10 ? Math.round(item.h * 100) : item.h,
+                    q: item.q
+                }));
+
+                renderAIInlineResults(correctedList);
             } catch (err) { 
                 alert("분석 실패\n이유: " + err.message + "\n(403에러 시 깃허브 주소 리퍼러 제한 설정 확인)");
             } finally { 
@@ -377,29 +388,37 @@
             }
         }
 
-        function renderAIResults(list) {
-            const container = document.getElementById('aiResultsList');
+        function renderAIInlineResults(list) {
+            const container = document.getElementById('aiInlineList');
             container.innerHTML = '';
             list.forEach((item, i) => {
-                const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between active:scale-95 transition-all";
-                card.onclick = () => { 
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded-xl border border-indigo-100 flex items-center justify-between shadow-sm animate-in active:scale-95 transition-all mb-2 cursor-pointer";
+                div.onclick = () => {
                     document.getElementById('w_in').value = item.w;
                     document.getElementById('h_in').value = item.h;
                     document.getElementById('q_goal').value = item.q;
-                    closeAIModal();
-                    showToast("치수가 자동 입력되었습니다.");
-                    if (document.getElementById('r_in').value) setTimeout(calculate, 300);
+                    haptic(30);
+                    showToast("치수 자동 입력 완료");
                 };
-                card.innerHTML = `<div><p class="text-2xl font-black">${item.w} x ${item.h}</p><p class="text-rose-500 font-bold text-xs uppercase">목표 ${item.q}장</p></div><i class="fa-solid fa-chevron-right text-slate-300"></i>`;
-                container.appendChild(card);
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">${i+1}</span>
+                        <p class="text-xl font-black text-slate-800 tabular-nums">${item.w} <small class="text-slate-300 mx-0.5">x</small> ${item.h}</p>
+                    </div>
+                    <span class="bg-rose-50 text-rose-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">목표 ${item.q}개</span>
+                `;
+                container.appendChild(div);
             });
-            const m = document.getElementById('aiResultsModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10);
-            haptic(30);
+            document.getElementById('aiResultBox').classList.add('open');
+            haptic(40);
         }
-        function closeAIModal() { const m = document.getElementById('aiResultsModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
 
-        // --- 기존 계산 로직 ---
+        function closeAIResultBox() { document.getElementById('aiResultBox').classList.remove('open'); }
+
+        /* -----------------------------------------------------------
+           원본 마스터 계산 로직 (센터, 분할, 웨빙 등 100% 보존)
+        ----------------------------------------------------------- */
         function toggleHistory() {
             const list = document.getElementById('historyList');
             const icon = document.getElementById('historyIcon');
@@ -439,18 +458,13 @@
             list.innerHTML = historyData.map(data => {
                 const isVertical = data.pull_label === '세로';
                 const badgeClass = isVertical ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-100 text-slate-500 border border-slate-200';
-                
                 let webbingParts = [];
                 if (data.p1_in) webbingParts.push(`W1 : ${data.p1_in}`);
                 if (data.p2_in) webbingParts.push(`W2 : ${data.p2_in}`);
                 let webbingText = webbingParts.join(' / ');
-                
-                const webbingBadge = webbingText.trim() 
-                    ? `<span class="text-[12px] text-amber-600 font-black border border-amber-100 bg-amber-50 px-2 py-0.5 rounded ml-2 shadow-sm">${webbingText}</span>` 
-                    : '';
-                    
+                const webbingBadge = webbingText.trim() ? `<span class="text-[12px] text-amber-600 font-black border border-amber-100 bg-amber-50 px-2 py-0.5 rounded ml-2 shadow-sm">${webbingText}</span>` : '';
                 return `
-                <div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 history-card w-full" onclick="fillFormFromHistory(${data.id})">
+                <div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 history-card w-full mb-3" onclick="fillFormFromHistory(${data.id})">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <div class="text-3xl font-black text-slate-900 flex items-center gap-x-2 leading-none mb-3 tabular-nums">
@@ -459,9 +473,7 @@
                                 <span class="text-blue-600 text-xl font-black">폭 ${data.r_in || '-'}</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="${badgeClass} text-[12px] px-2.5 py-1 rounded-lg font-black uppercase">
-                                    ${data.pull_label || '-'} 당김
-                                </span>
+                                <span class="${badgeClass} text-[12px] px-2.5 py-1 rounded-lg font-black uppercase">${data.pull_label || '-'} 당김</span>
                                 ${webbingBadge}
                             </div>
                             <div class="mt-3">
@@ -545,13 +557,10 @@
             document.querySelectorAll('input').forEach(i => i.value = ''); 
             hideError(); 
             document.getElementById('resultArea').classList.add('hidden'); 
-            
+            closeAIResultBox();
             const list = document.getElementById('historyList');
             const icon = document.getElementById('historyIcon');
-            if (!list.classList.contains('hidden')) {
-                list.classList.add('hidden');
-                icon.style.transform = 'rotate(0deg)';
-            }
+            if (!list.classList.contains('hidden')) { list.classList.add('hidden'); icon.style.transform = 'rotate(0deg)'; }
         }
 
         function getChipStyle(val) {
@@ -625,8 +634,7 @@
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
             for (let n = 2; n <= 10; n++) {
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
-                let floorB = isGoal ? Math.floor(Q / n) : 1; 
-                let remB = isGoal ? (Q % n) : 0;
+                let floorB = isGoal ? Math.floor(Q / n) : 1; let remB = isGoal ? (Q % n) : 0;
                 let curB_for_cut = isGoal ? Math.ceil(Q / n) : 1; 
                 let totalCutCount = n + curB_for_cut + (finalWaste > 0 ? 1 : 0);
                 const isRec = isGoal && (totalCutCount === minCuts);
@@ -637,14 +645,9 @@
                 let s4 = []; for(let i=0; i<n; i++) { let b = PULL * i; s4.push(fmtSpecial(b + PULL/4)); s4.push(fmtSpecial(b + PULL*3/4)); }
                 
                 let dWeb = []; if (!isNaN(P1_val) && P1_val <= PULL) dWeb.push(P1_val); if (!isNaN(P2_val) && P2_val <= PULL) dWeb.push(P2_val);
-                let pts = []; 
-                if (dWeb.length > 0) {
-                    for(let i=0; i<n; i++) { let b = PULL * i; dWeb.forEach(vp => pts.push(fmtSpecial(b + vp))); } 
-                    pts.sort((a,b)=>a-b);
-                }
+                let pts = []; if (dWeb.length > 0) { for(let i=0; i<n; i++) { let b = PULL * i; dWeb.forEach(vp => pts.push(fmtSpecial(b + vp))); } pts.sort((a,b)=>a-b); }
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
-                
                 let htmlContent = `
                 <div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent">
                     <div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div>
@@ -665,63 +668,32 @@
                 </div>
                 <div class="px-5 py-2 space-y-2">
                     <div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm">
-                        <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md">
-                            <i class="fa-solid fa-ruler-combined"></i>
-                        </div>
-                        <p class="text-5xl font-black leading-none flex-1 text-center">
-                            <span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span>
-                            <span class="text-slate-900 text-3xl ml-1">cm</span>
-                        </p>
+                        <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div>
+                        <p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p>
                     </div>
-                    
                     <div class="space-y-2 pt-2 pb-5">
                         <div class="flex flex-col gap-2 mb-2">
                             <span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span>
                             <div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
                         </div>
-
                         <div>
-                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-violet-500 transition-colors">
-                                <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-crosshairs mr-1.5 text-[10px]"></i> Centers</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
-                            </button>
-                            <div class="hidden pt-2">
-                                <div class="grid grid-cols-4 gap-2.5">${centers.map(c => `<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
-                            </div>
+                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-violet-500 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-crosshairs mr-1.5 text-[10px]"></i> Centers</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button>
+                            <div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${centers.map(c => `<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div>
                         </div>
-
                         <div>
-                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-emerald-600 transition-colors">
-                                <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-bars-staggered mr-1.5 text-[10px]"></i> 3-Parts</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
-                            </button>
-                            <div class="hidden pt-2">
-                                <div class="grid grid-cols-4 gap-2.5">${thirds.map(t => `<span class="data-chip text-emerald-900" ${getChipStyle(t)}>${t}</span>`).join('')}</div>
-                            </div>
+                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-emerald-600 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-bars-staggered mr-1.5 text-[10px]"></i> 3-Parts</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button>
+                            <div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${thirds.map(t => `<span class="data-chip text-emerald-900" ${getChipStyle(t)}>${t}</span>`).join('')}</div></div>
                         </div>
-
                         <div>
-                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-blue-500 transition-colors">
-                                <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-border-all mr-1.5 text-[10px]"></i> 4-Parts</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
-                            </button>
-                            <div class="hidden pt-2">
-                                <div class="grid grid-cols-4 gap-2.5">${s4.map(p => `<span class="data-chip text-blue-600" ${getChipStyle(p)}>${p}</span>`).join('')}</div>
-                            </div>
+                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-blue-500 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-border-all mr-1.5 text-[10px]"></i> 4-Parts</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button>
+                            <div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${s4.map(p => `<span class="data-chip text-blue-600" ${getChipStyle(p)}>${p}</span>`).join('')}</div></div>
                         </div>
-
                         <div>
-                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-amber-600 transition-colors">
-                                <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-grip-lines mr-1.5 text-[10px]"></i> Webbing</span>
-                                <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
-                            </button>
-                            <div class="hidden pt-2">
-                                ${pts.length > 0 ? `<div class="grid grid-cols-4 gap-2.5">${pts.map(p => `<span class="data-chip text-amber-900" ${getChipStyle(p)}>${p}</span>`).join('')}</div>` : ''}
-                            </div>
+                            <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-amber-600 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-grip-lines mr-1.5 text-[10px]"></i> Webbing</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button>
+                            <div class="hidden pt-2">${pts.length > 0 ? `<div class="grid grid-cols-4 gap-2.5">${pts.map(p => `<span class="data-chip text-amber-900" ${getChipStyle(p)}>${p}</span>`).join('')}</div>` : ''}</div>
                         </div>
                     </div>
                 </div>`;
-                
                 card.innerHTML = htmlContent; container.appendChild(card);
             }
             if (!isFromHistory) saveToHistory(W, H, rIn ? R : '', p1Raw, p2Raw, (isGoal ? goalN : 0), doneTotal, Q, pullLabel);
