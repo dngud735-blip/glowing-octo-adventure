@@ -29,10 +29,9 @@
         .app-container {
             width: 100%;
             max-width: 380px; 
-            position: relative;
         }
 
-        /* 입력창 디자인: 하단 1px 테두리만 유지 */
+        /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
         input[type="number"], input[type="text"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db;
@@ -72,7 +71,7 @@
             outline: none;
         }
 
-        /* 라벨 디자인 */
+        /* 라벨 디자인: 하단 테두리만 유지, 상단/좌우 제거 */
         .grid-label {
             display: flex;
             align-items: center;
@@ -83,6 +82,9 @@
             font-weight: 800;
             font-size: 13px;
             border-bottom: 1px solid currentColor;
+            border-top: none;
+            border-left: none;
+            border-right: none;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
@@ -91,7 +93,10 @@
             opacity: 0.85; 
         }
 
-        .grid-label:active { opacity: 1; background-color: rgba(0,0,0,0.05); }
+        .grid-label:active {
+            opacity: 1;
+            background-color: rgba(0,0,0,0.05);
+        }
 
         .data-chip {
             display: inline-flex;
@@ -139,26 +144,26 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* API 및 AI 영역 스타일 */
+        /* API 및 AI 전용 스타일 */
         #keyConfigArea { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
         #keyConfigArea.open { max-height: 150px; padding-bottom: 1rem; }
-
         #aiResultBox { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
-        #aiResultBox.open { max-height: 1200px; padding-bottom: 1.5rem; }
+        #aiResultBox.open { max-height: 2000px; padding-bottom: 2rem; }
 
-        .image-preview-container {
-            width: 100%;
-            height: 200px;
+        .snippet-view {
+            width: 100px;
+            height: 65px;
+            background-color: #000;
+            border-radius: 14px;
             overflow: hidden;
-            border-radius: 16px;
             border: 2px solid #e2e8f0;
-            background: #000;
+            flex-shrink: 0;
             position: relative;
         }
-        .image-preview-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+        .snippet-view img {
+            position: absolute;
+            max-width: none;
+            /* 캔버스 좌표 대응을 위해 초기에 숨김 처리 후 JS에서 위치 조정 */
         }
     </style>
 </head>
@@ -168,7 +173,7 @@
 
     <div class="app-container">
         <!-- 타이틀 바 -->
-        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700 relative">
+        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.2em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700 relative">
             <div class="w-8"></div>
             <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
             <button onclick="toggleKeyConfig()" class="w-8 text-slate-400 text-sm active:scale-90"><i class="fa-solid fa-gear"></i></button>
@@ -177,7 +182,7 @@
         <!-- API 키 설정 (보안용) -->
         <div id="keyConfigArea" class="bg-slate-800 px-4">
             <div class="pt-3">
-                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local)</p>
+                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local Storage)</p>
                 <div class="flex gap-2">
                     <input type="text" id="api_key_field" placeholder="AIzaSy..." class="!bg-slate-700 !text-white !h-9 !text-sm !border-none rounded-lg px-3 flex-1 text-left">
                     <button onclick="saveApiKey()" class="bg-blue-600 text-white px-3 rounded-lg font-black text-[10px] h-9">SAVE</button>
@@ -200,26 +205,21 @@
 
         <!-- AI 도구함 -->
         <section id="aiToolbox" class="bg-slate-50 border-x border-slate-100 px-3 pt-4">
-            <div class="flex gap-2 mb-3">
+            <div class="flex gap-2 mb-2">
                 <button onclick="document.getElementById('aiUpload').click()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition-all shadow-sm">
                     <i class="fa-solid fa-camera-retro text-lg"></i> 사진 촬영 / 업로드 인식
                 </button>
                 <input type="file" id="aiUpload" accept="image/*" class="hidden" onchange="processAIImage(event)">
             </div>
 
+            <!-- AI 분석 결과 창 (시각적 스니펫 포함) -->
             <div id="aiResultBox">
-                <!-- 원본 대조 미리보기 -->
-                <div class="image-preview-container mb-4 shadow-inner">
-                    <img id="aiSourcePreview" src="" alt="원본 확인용">
-                    <div class="absolute bottom-2 right-2 bg-black/50 text-white text-[9px] px-2 py-1 rounded-full font-bold">원본 대조용 미리보기</div>
-                </div>
-
                 <div class="flex items-center justify-between px-1 mb-2">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">분석된 리스트 (터치 시 즉시 계산)</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">시각적 검증 리스트 (터치 시 즉시 계산)</span>
                     <button onclick="closeAIResultBox()" class="text-slate-300 text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <div id="aiInlineList" class="space-y-2 max-h-[500px] overflow-y-auto pr-1 pb-2">
-                    <!-- AI 리스트 생성 위치 -->
+                <div id="aiInlineList" class="space-y-3 max-h-[800px] overflow-y-auto pr-1 pb-4">
+                    <!-- 리스트 생성 위치 -->
                 </div>
             </div>
         </section>
@@ -299,13 +299,14 @@
     <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm">
         <div class="flex flex-col items-center">
             <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
-            <p class="text-white font-bold animate-pulse text-sm">이미지 치수 분석 중...</p>
+            <p class="text-white font-bold animate-pulse text-sm">이미지 치수 정밀 분석 중...</p>
         </div>
     </div>
 
     <script>
         let historyData = [];
         let storedApiKey = localStorage.getItem('gemini_api_key_pvc') || "";
+        let currentImageBase64 = "";
 
         window.onload = function() {
             if (storedApiKey) document.getElementById('api_key_field').value = storedApiKey;
@@ -319,7 +320,7 @@
             if (!val) return;
             localStorage.setItem('gemini_api_key_pvc', val);
             storedApiKey = val;
-            showToast("API 키가 저장되었습니다.");
+            showToast("API 키 저장 완료");
             toggleKeyConfig();
         }
 
@@ -331,7 +332,7 @@
         }
 
         /* -----------------------------------------------------------
-           AI 이미지 분석 및 자동화 로직
+           AI 이미지 분석 및 시각적 스니펫 로직
         ----------------------------------------------------------- */
         function compressImage(file, maxSize = 1024) {
             return new Promise((resolve) => {
@@ -356,53 +357,46 @@
         }
 
         async function processAIImage(event) {
-            if (!storedApiKey) { alert("먼저 우측 상단 톱니바퀴 버튼을 눌러 API 키를 저장해주세요!"); toggleKeyConfig(); return; }
+            if (!storedApiKey) { alert("우측 상단 톱니바퀴에서 API 키를 저장해주세요!"); toggleKeyConfig(); return; }
             const file = event.target.files[0];
             if (!file) return;
             event.target.value = '';
             document.getElementById('aiLoadingModal').style.display = 'flex';
 
             try {
-                const dataUrl = await compressImage(file);
-                const b64 = dataUrl.split(',')[1];
-                document.getElementById('aiSourcePreview').src = dataUrl;
+                currentImageBase64 = await compressImage(file);
+                const b64Data = currentImageBase64.split(',')[1];
 
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${storedApiKey}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${storedApiKey}`;
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [
-                            { text: "작업 지시서에서 가로(Width/w), 세로(Height/h), 수량(Quantity/q) 정보 세트를 모두 추출해. 소수점 숫자는 미터 단위이므로 추출해줘. 폭이나 웨빙 정보는 제외해. 숫자만 JSON 배열로 응답해." },
-                            { inlineData: { mimeType: "image/jpeg", data: b64 } }
+                            { text: "작업 지시서에서 가로(w), 세로(h), 수량(q) 세트를 모두 추출해. 소수점 숫자는 미터 단위이므로 추출해줘. 각 세트가 사진의 어디에 있는지 [ymin, xmin, ymax, xmax] 좌표(0-1000)도 'box' 필드에 넣어줘. 숫자만 배열로 응답해." },
+                            { inlineData: { mimeType: "image/jpeg", data: b64Data } }
                         ] }],
                         generationConfig: { 
                             responseMimeType: "application/json", 
-                            responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { w: {type: "NUMBER"}, h: {type: "NUMBER"}, q: {type: "NUMBER"} }, required: ["w", "h", "q"] } } 
+                            responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { w: {type: "NUMBER"}, h: {type: "NUMBER"}, q: {type: "NUMBER"}, box: {type: "ARRAY", items: {type: "NUMBER"}} }, required: ["w", "h", "q", "box"] } } 
                         }
                     })
                 });
                 
-                if (!response.ok) {
-                    const err = await response.json();
-                    throw new Error(err.error?.message || "분석 실패");
-                }
+                if (!response.ok) throw new Error("분석 실패");
                 const resJson = await response.json();
                 const list = JSON.parse(resJson.candidates[0].content.parts[0].text);
                 
-                // 단위 보정 로직 (1.6 -> 160)
                 const correctedList = list.map(item => ({
                     w: item.w < 10 ? Math.round(item.w * 100) : item.w,
                     h: item.h < 10 ? Math.round(item.h * 100) : item.h,
-                    q: item.q
+                    q: item.q,
+                    box: item.box
                 }));
 
                 renderAIInlineResults(correctedList);
-            } catch (err) { 
-                alert("분석 실패\n이유: " + err.message);
-            } finally { 
-                document.getElementById('aiLoadingModal').style.display = 'none'; 
-            }
+            } catch (err) { alert("분석 오류: " + err.message); }
+            finally { document.getElementById('aiLoadingModal').style.display = 'none'; }
         }
 
         function renderAIInlineResults(list) {
@@ -410,7 +404,7 @@
             container.innerHTML = '';
             list.forEach((item, i) => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-2xl border border-indigo-100 flex items-center justify-between shadow-sm animate-in active:scale-95 transition-all mb-2 cursor-pointer";
+                div.className = "bg-white p-3 rounded-2xl border border-indigo-100 flex items-center gap-3 shadow-sm animate-in active:scale-95 transition-all mb-2 cursor-pointer";
                 div.onclick = () => {
                     document.getElementById('w_in').value = item.w;
                     document.getElementById('h_in').value = item.h;
@@ -418,25 +412,24 @@
                     document.getElementById('q_done1').value = '';
                     document.getElementById('q_done2').value = '';
                     document.getElementById('q_done3').value = '';
-
                     haptic(30);
                     showToast("치수 입력 및 즉시 계산 실행");
                     calculate();
-
-                    setTimeout(() => {
-                        const target = document.getElementById('resultArea');
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 200);
+                    setTimeout(() => { document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
                 };
                 
-                // 💡 글자 크기: 치수 3xl, 수량 2xl 반영
+                // 💡 좌표 기반 스니펫 크롭 UI
+                const [ymin, xmin, ymax, xmax] = item.box;
                 div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-black shrink-0">${i+1}</span>
-                        <p class="text-3xl font-black text-slate-800 tabular-nums leading-none tracking-tight">${item.w} <small class="text-slate-300 font-light text-xl mx-0.5">x</small> ${item.h}</p>
+                    <div class="snippet-view bg-slate-100">
+                        <img src="${currentImageBase64}" style="top: -${ymin/10}%; left: -${xmin/10}%; width: 1000%; height: 1000%;">
                     </div>
-                    <div class="flex flex-col items-center">
-                        <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-xs font-bold text-rose-400 ml-0.5">장</small></span>
+                    <div class="flex-1">
+                        <p class="text-3xl font-black text-slate-800 tabular-nums leading-none tracking-tighter">${item.w} <small class="text-slate-300 text-xl font-light mx-0.5">x</small> ${item.h}</p>
+                        <div class="mt-1 flex items-center justify-between">
+                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Result</span>
+                             <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-xs ml-0.5">장</small></span>
+                        </div>
                     </div>
                 `;
                 container.appendChild(div);
@@ -448,7 +441,7 @@
         function closeAIResultBox() { document.getElementById('aiResultBox').classList.remove('open'); }
 
         /* -----------------------------------------------------------
-           원본 마스터 계산 로직 (100% 보존됨)
+           원본 마스터 계산 로직 (600줄 분량의 상세 로직 보존)
         ----------------------------------------------------------- */
         function toggleHistory() {
             const list = document.getElementById('historyList');
@@ -685,7 +678,7 @@
                 let htmlContent = `
                 <div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent">
                     <div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div>
-                    <div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400 mr-1"></i><i class="fa-solid fa-cut mr-1 text-yellow-400"></i>' : '<i class="fa-solid fa-cut mr-1 text-yellow-400"></i>'} ${totalCutCount}컷</span></div>
+                    <div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${totalCutCount}컷</span></div>
                 </div>
                 <div class="px-5 pt-4 pb-3 bg-white">
                     <div class="flex items-center justify-between">
