@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>PVC Mesh Cutting Calculator</title>
-    <!-- 디자인 필수 라이브러리 -->
+    <!-- 디자인 필수 라이브러리 직접 연결 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -21,9 +21,7 @@
             color: #1e293b;
             padding: 10px 14px 40px;
             -webkit-font-smoothing: antialiased;
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
+            display: flex; flex-direction: column; align-items: center; 
             overflow-x: hidden;
         }
 
@@ -36,7 +34,7 @@
             border-top: none !important; border-left: none !important; border-right: none !important;
             border-radius: 0px !important; 
             padding: 0px; font-size: 1.2rem; font-weight: 700; text-align: center;
-            width: 100%; height: 42px; line-height: 42px;
+            width: 100%; height: 44px; line-height: 44px;
             color: #1e293b; background-color: #ffffff; outline: none; transition: all 0.2s;
         }
         input[type="number"]:focus { border-bottom-color: var(--primary) !important; background-color: #fff; }
@@ -44,7 +42,7 @@
         /* 라벨 디자인: 하단 테두리만 유지 */
         .grid-label {
             display: flex; align-items: center; justify-content: center;
-            height: 42px; width: 100%; border-radius: 0px; 
+            height: 44px; width: 100%; border-radius: 0px; 
             font-weight: 800; font-size: 13px;
             border-bottom: 1px solid currentColor !important;
             border-top: none !important; border-left: none !important; border-right: none !important;
@@ -52,7 +50,7 @@
         }
 
         .action-btn {
-            height: 46px; width: 100%; display: flex; align-items: center; justify-content: center;
+            height: 48px; width: 100%; display: flex; align-items: center; justify-content: center;
             border-radius: 0px; font-weight: 900; transition: all 0.2s; text-transform: uppercase;
         }
 
@@ -89,36 +87,36 @@
     <div id="toast"></div>
 
     <div class="app-container">
-        <!-- 상단 타이틀 -->
-        <div class="bg-slate-900 text-white flex items-center justify-center font-black uppercase text-[11px] tracking-[0.25em] h-[38px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
+        <!-- 상단 타이틀 바 -->
+        <div class="bg-slate-900 text-white flex items-center justify-center font-black uppercase text-[11px] tracking-[0.25em] h-[42px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
             <span>PVC Mesh Cutting Calculator</span>
         </div>
 
         <!-- 사진 분석 섹션 -->
         <div class="bg-white border-x border-slate-100 p-3 flex flex-col gap-3 shadow-sm">
             <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
-            <button id="photoBtn" onclick="document.getElementById('photoInput').click(); haptic(15);" class="w-full h-12 bg-blue-600 text-white flex items-center justify-center gap-3 font-black rounded-xl shadow-md active:scale-95 transition-all text-sm">
+            <button id="photoBtn" onclick="document.getElementById('photoInput').click(); haptic(15);" class="w-full h-12 bg-blue-600 text-white flex items-center justify-center gap-3 font-black rounded-xl shadow-md active:scale-95 transition-all text-sm uppercase">
                 <i class="fa-solid fa-camera-retro text-lg"></i>
                 재단데이터 사진 분석하기
             </button>
 
-            <!-- 분석 로딩 -->
+            <!-- 로딩 바 -->
             <div id="aiLoading" class="hidden flex items-center justify-center p-5 bg-slate-50 rounded-xl border border-dashed border-blue-200">
                 <span class="loader mr-3"></span>
-                <span class="text-sm font-bold text-slate-600">AI가 데이터를 읽고 있습니다...</span>
+                <span class="text-sm font-bold text-slate-600">AI가 데이터를 분석 중입니다...</span>
             </div>
 
-            <!-- 추출 리스트 -->
+            <!-- 분석 결과 리스트 -->
             <div id="aiResultArea" class="hidden animate-in">
                 <div class="flex items-center justify-between px-1 mb-2">
-                    <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest">추출 결과 (터치 시 입력)</span>
+                    <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">데이터 선택 (터치 시 입력)</span>
                     <button onclick="closeAiResult()" class="text-slate-400 p-1"><i class="fa-solid fa-circle-xmark text-lg"></i></button>
                 </div>
-                <div id="photoResultList" class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-inner max-height-[280px] overflow-y-auto"></div>
+                <div id="photoResultList" class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden shadow-inner max-h-[280px] overflow-y-auto"></div>
             </div>
         </div>
 
-        <!-- 입력부 -->
+        <!-- 입력 영역 -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-3">
             <div class="grid grid-cols-4 gap-y-3 gap-x-3 items-center">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
@@ -149,9 +147,9 @@
             </div>
         </main>
 
-        <!-- 히스토리 -->
+        <!-- 히스토리 영역 -->
         <footer id="historySection" class="w-full">
-            <div class="flex items-center justify-between px-1 cursor-pointer py-5" onclick="toggleHistory()">
+            <div class="flex items-center justify-between px-1 cursor-pointer py-6" onclick="toggleHistory()">
                 <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3"><i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500"></i> History</h2>
                 <button onclick="confirmClearAll()" class="text-sm font-black text-red-400 uppercase px-3">Clear All</button>
             </div>
@@ -163,10 +161,23 @@
             <section id="summaryCardContainer" class="animate-in">
                 <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
                     <div class="bg-slate-900 px-4 py-2 text-center border-b border-transparent"><h2 id="summaryCardHeader" class="text-white font-black text-lg"></h2></div>
-                    <div class="p-2.5 space-y-2.5" id="summaryList"></div>
+                    <div class="p-3 space-y-2.5" id="summaryList"></div>
                 </div>
             </section>
             <div id="cardsContainer" class="space-y-[40px] pb-12 px-1 flex flex-col items-center"></div>
+        </div>
+    </div>
+
+    <!-- 전체 삭제 확인 모달 -->
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
+            <div class="mb-4 text-4xl text-red-500"><i class="fa-solid fa-trash-can"></i></div>
+            <h3 class="text-xl font-black mb-2 text-slate-800">기록 삭제</h3>
+            <p class="text-slate-500 text-sm mb-6 font-medium">모든 히스토리를 삭제하시겠습니까?</p>
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('deleteModal').style.display='none'" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">취소</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-sm">삭제</button>
+            </div>
         </div>
     </div>
 
@@ -183,10 +194,10 @@
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.innerText = msg; toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
         }
 
-        // --- AI 분석 엔진 ---
+        // --- 분석 엔진 로직 (강화된 파싱 로직 포함) ---
         async function handlePhotoUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
@@ -204,11 +215,12 @@
                 if (response && response.rows && response.rows.length > 0) {
                     renderAiList(response.rows);
                 } else {
-                    showToast("표에서 데이터를 읽지 못했습니다. 선명하게 찍어주세요.");
+                    showToast("표에서 데이터를 찾지 못했습니다.");
                     loadingArea.classList.add('hidden');
                 }
             } catch (err) {
-                showToast("분석 서버가 응답하지 않습니다. 다시 시도해 주세요.");
+                console.error(err);
+                showToast("분석 서버 지연. 잠시 후 다시 시도해 주세요.");
                 loadingArea.classList.add('hidden');
             } finally {
                 photoBtn.disabled = false;
@@ -223,7 +235,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        const maxSide = 1000;
+                        const maxSide = 1024;
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > maxSide) { h *= maxSide / w; w = maxSide; } }
                         else { if (h > maxSide) { w *= maxSide / h; h = maxSide; } }
@@ -239,7 +251,7 @@
         }
 
         async function callGeminiOCR(base64Data) {
-            const prompt = "Extract cutting dimensions. Columns: Width(가로), Height(세로), Quantity(수량). Convert meter (e.g. 1.22) to cm (122). Respond in JSON ONLY: {'rows': [{'w': 100, 'h': 200, 'q': 5}]}";
+            const prompt = "Extract dimensions from this cutting table image. Columns: Width(가로/옆), Height(세로/높이), Quantity(수량/장). Convert meter decimals (e.g. 1.22) to centimeters (122). Respond ONLY in pure JSON: {'rows': [{'w': 100, 'h': 200, 'q': 5}]}";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             for (let i = 0; i < 3; i++) {
@@ -251,9 +263,12 @@
                     });
                     if (!resp.ok) throw new Error();
                     const result = await resp.json();
-                    const text = result.candidates[0].content.parts[0].text;
-                    const jsonMatch = text.match(/\{[\s\S]*\}/); // 텍스트 찌꺼기 제거 로직
-                    return JSON.parse(jsonMatch[0]);
+                    const rawText = result.candidates[0].content.parts[0].text;
+                    
+                    // AI의 답변에서 JSON 블록만 자석처럼 골라내는 정규식 (핵심 로직)
+                    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+                    return null;
                 } catch (e) { await new Promise(r => setTimeout(r, 1000 * (i + 1))); }
             }
             return null;
@@ -266,7 +281,7 @@
                 <div class="photo-row-item p-4 flex items-center justify-between border-b border-slate-200 last:border-0" onclick="applyAiRow(${r.w}, ${r.h}, ${r.q})">
                     <div class="flex items-center gap-3">
                         <span class="text-[10px] font-black text-slate-300">#${i+1}</span>
-                        <span class="text-xl font-black text-slate-900 tabular-nums">${r.w} <small class="text-slate-400">×</small> ${r.h}</span>
+                        <span class="text-xl font-black text-slate-900 tabular-nums">${r.w} × ${r.h}</span>
                     </div>
                     <span class="bg-blue-600 text-white px-3 py-1 rounded-lg font-black text-sm">${r.q}장</span>
                 </div>
@@ -279,16 +294,16 @@
             document.getElementById('w_in').value = w;
             document.getElementById('h_in').value = h;
             document.getElementById('q_goal').value = q;
-            showToast("데이터가 입력되었습니다."); haptic(25); calculate();
+            showToast("데이터 입력 완료!"); haptic(25); calculate();
         }
 
         function closeAiResult() { document.getElementById('aiResultArea').classList.add('hidden'); }
 
-        // --- 계산 로직 (1회 끝장) ---
+        // --- 계산 로직 (1회 끝장 및 디자인 적용) ---
         function calculate(isFromHistory = false) {
             haptic(30); if(document.activeElement) document.activeElement.blur();
             const wIn = document.getElementById('w_in').value, hIn = document.getElementById('h_in').value;
-            if (!wIn || !hIn) { showToast("치수를 입력하세요."); return; }
+            if (!wIn || !hIn) return;
             
             const W = parseFloat(wIn), H = parseFloat(hIn), R = document.getElementById('r_in').value ? parseFloat(document.getElementById('r_in').value) : H;
             const goalN = document.getElementById('q_goal').value ? parseFloat(document.getElementById('q_goal').value) : 0;
@@ -301,7 +316,7 @@
             else { FIX = W; PULL = H; finalWaste = wasteW; pullLabel = "세로"; }
             
             document.getElementById('resultArea').classList.remove('hidden');
-            document.getElementById('summaryCardHeader').innerHTML = `<span class="text-3xl font-black text-white leading-none pl-1">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span>`;
+            document.getElementById('summaryCardHeader').innerHTML = `<span class="text-3xl font-black text-white leading-none pl-1">${fmt(W)} <small class="text-slate-500">X</small> ${fmt(H)}</span>`;
             document.getElementById('summaryList').innerHTML = `<div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between"><span class="text-[12px] font-black text-slate-400 uppercase tracking-widest leading-none">Trim</span><span class="text-2xl font-black text-slate-800 leading-none">폭 ${fmt(R)} - ${fmt(FIX)} = <span class="text-red-500">${fmt(finalWaste)}cm</span></span></div><div class="grid grid-cols-2 gap-2.5 mt-2.5"><div class="bg-violet-50/50 p-2 rounded-xl text-center"><span class="text-[12px] font-black text-violet-400 block mb-1">CENTER</span><span class="text-xl font-black text-violet-700">${fmtSpecial(FIX/2)}</span></div><div class="bg-emerald-50/50 p-2 rounded-xl text-center"><span class="text-[12px] font-black text-emerald-600 block mb-1">3-PART</span><span class="text-xl font-black text-emerald-900">${Math.round(FIX/3)} / ${Math.round(FIX*2/3)}</span></div></div>`;
             
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
@@ -313,18 +328,19 @@
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL * i));
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden shadow-md ${isFinal ? 'ring-4 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
-                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isFinal ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} <span style="margin-left:4px;">${totalCutCount}컷</span></span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${(goalN > 0) ? floorB+'회' : n+'장'}</span></div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-xl font-black uppercase tracking-tight border-2 transition-all">${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm leading-none flex items-center text-center">1회 ${n}장</span>${(goalN > 0) ? `<div class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[12px] uppercase"><span class="text-slate-500 font-black">잔여</span> ${Q}</span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black flex-1 text-center tabular-nums text-blue-600">${fmt(totalLen)}<small class="text-slate-900 text-3xl ml-1 font-black">cm</small></p></div><div class="space-y-2 pt-2 pb-5"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" style="font-size:1.45rem;">${c}</span>`).join('')}</div></div></div>`;
+                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isFinal ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} <span style="margin-left:4px;">${totalCutCount}컷</span></span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${(goalN > 0) ? floorB+'회' : n+'장'}</span></div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-xl font-black uppercase tracking-tight border-2 transition-all">${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black border-2 border-blue-100 shadow-sm leading-none flex items-center text-center px-4">1회 ${n}장</span>${(goalN > 0) ? `<div class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[13px] font-black uppercase"><span class="text-slate-500">목표</span> ${goalN} - <span class="text-slate-500">완료</span> ${doneTotal} = <span class="text-blue-500">잔여</span> ${Q}</span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black flex-1 text-center tabular-nums text-blue-600">${fmt(totalLen)}<small class="text-slate-900 text-3xl ml-1 font-black">cm</small></p></div><div class="space-y-2 pt-2 pb-5"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" style="font-size:1.45rem;">${c}</span>`).join('')}</div></div></div>`;
                 container.appendChild(card);
                 if (isFinal) break;
             }
-            if (!isFromHistory) saveToHistory(W, H, R, goalN, Q);
+            if (!isFromHistory) saveToHistory(W, H, Q);
         }
 
+        // --- 기타 유틸리티 ---
         function toggleHistory() { document.getElementById('historyList').classList.toggle('hidden'); haptic(15); }
-        function saveToHistory(w, h, r, qg, ql) { const current = { id: Date.now(), w_in: w, h_in: h, q_left: ql }; historyData.unshift(current); if (historyData.length > 10) historyData.pop(); localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
-        function renderHistory() { const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold">Empty</p>'; return; } list.innerHTML = historyData.map(d => `<div class="bg-white p-5 rounded-[24px] border border-slate-100" onclick="fillFormFromHistory(${d.id})"><div class="text-xl font-black text-slate-900">${d.w_in} × ${d.h_in} <span class="text-blue-600 text-sm ml-2">잔여 ${d.q_left}</span></div></div>`).join(''); }
+        function saveToHistory(w, h, ql) { const current = { id: Date.now(), w_in: w, h_in: h, q_left: ql }; historyData.unshift(current); if (historyData.length > 20) historyData.pop(); localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
+        function renderHistory() { const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold">Empty History</p>'; return; } list.innerHTML = historyData.map(d => `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100" onclick="fillFormFromHistory(${d.id})"><div class="text-xl font-black text-slate-900">${d.w_in} × ${d.h_in} <span class="text-blue-600 text-sm ml-2">잔여 ${d.q_left}</span></div></div>`).join(''); }
         function fillFormFromHistory(id) { const d = historyData.find(x => x.id === id); if (!d) return; haptic(25); document.getElementById('w_in').value = d.w_in; document.getElementById('h_in').value = d.h_in; calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function confirmClearAll() { if(confirm("기록을 지우시겠습니까?")) { historyData = []; localStorage.removeItem('pvc_mesh_calculator_history'); renderHistory(); showToast("초기화됨"); } }
+        function confirmClearAll() { document.getElementById('deleteModal').style.display='flex'; document.getElementById('confirmDeleteBtn').onclick = () => { historyData = []; localStorage.removeItem('pvc_mesh_calculator_history'); renderHistory(); document.getElementById('deleteModal').style.display='none'; showToast("초기화되었습니다."); }; }
         function handleEnter(event, isLast = false) { if (event.key === 'Enter') { calculate(); if (isLast) document.activeElement.blur(); } }
         function fmt(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
         function fmtSpecial(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
