@@ -33,7 +33,7 @@
             max-width: 380px; 
         }
 
-        /* 1. 입력창 디자인: 하단 1px 테두리만 유지, 90도 직각 */
+        /* 1. 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거, 90도 직각 */
         input[type="number"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db !important;
@@ -255,7 +255,7 @@
     </div>
 
     <script>
-        // [중요] 깃허브 사용 시 발급받으신 키를 아래 따옴표 안에 넣어주세요.
+        // 사용자님의 API 키가 적용되었습니다.
         const apiKey = "AIzaSyAr7wmH50WZb9aHTDWbBiaArBsSTDbQ6xs"; 
         let historyData = [];
 
@@ -271,7 +271,7 @@
             setTimeout(() => { toast.classList.remove('show'); }, 2000);
         }
 
-        // --- 분석 엔진 로직 (지수 백오프 및 공식 문서 방식 적용) ---
+        // --- 분석 엔진 로직 (지수 백오프 및 헤더 인증 방식 적용) ---
         async function handlePhotoUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
@@ -293,7 +293,6 @@
                 showToast("데이터 추출 실패. 선명하게 다시 찍어주세요.");
                 document.getElementById('aiLoading').classList.add('hidden');
             } finally {
-                // 어떤 상황에서도 버튼 재활성화 (먹통 방지)
                 document.getElementById('photoBtn').disabled = false;
                 input.value = ''; 
             }
@@ -301,16 +300,19 @@
 
         async function callGeminiWithRetries(base64Data) {
             const systemPrompt = "Extract cutting dimensions from the table in the image. Search for Width(옆), Height(높이), and Quantity(발주수량). Convert meter decimals (e.g. 1.22) to cm (122). Respond in JSON schema: {rows: [{w: number, h: number, q: number}]}";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const delays = [1000, 2000, 4000, 8000, 16000];
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`;
+            const delays = [1000, 2000, 4000];
 
             for (let i = 0; i < delays.length; i++) {
                 try {
                     const resp = await fetch(url, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-goog-api-key': apiKey // curl 방식과 동일하게 헤더에 키를 넣음
+                        },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: "Extract table data." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
+                            contents: [{ parts: [{ text: "Analyze table data." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
                             systemInstruction: { parts: [{ text: systemPrompt }] },
                             generationConfig: { 
                                 responseMimeType: "application/json",
@@ -407,9 +409,9 @@
             }
             const wasteW = (R < W) ? 99999 : (R - W), wasteH = (R < H) ? 99999 : (R - H);
             if (wasteW === 99999 && wasteH === 99999) { showError("원단 폭 부족."); return; }
-            let FIX, PULL, finalWaste, fixLabel, pullLabel;
-            if (wasteH <= wasteW) { FIX = H; PULL = W; finalWaste = wasteH; fixLabel = "세로"; pullLabel = "가로"; } 
-            else { FIX = W; PULL = H; finalWaste = wasteW; fixLabel = "가로"; pullLabel = "세로"; }
+            let FIX, PULL, finalWaste, pullLabel;
+            if (wasteH <= wasteW) { FIX = H; PULL = W; finalWaste = wasteH; pullLabel = "가로"; } 
+            else { FIX = W; PULL = H; finalWaste = wasteW; pullLabel = "세로"; }
             
             let minCuts = 999999;
             for (let n = 2; n <= 10; n++) {
@@ -429,17 +431,13 @@
             for (let n = 2; n <= 10; n++) {
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
                 let floorB = isGoal ? Math.floor(Q / n) : 1; let remB = isGoal ? (Q % n) : 0;
-                let curB_for_cut = isGoal ? Math.ceil(Q / n) : 1; 
-                let totalCutCount = n + curB_for_cut + (finalWaste > 0 ? 1 : 0);
+                let totalCutCount = n + (isGoal ? Math.ceil(Q / n) : 1) + (finalWaste > 0 ? 1 : 0);
                 const isRec = isGoal && (totalCutCount === minCuts);
-                
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL * i));
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
-                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} ${totalCutCount}컷</span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? floorB+'회' : n+'장'}</span>${isGoal && remB > 0 ? `<span class="text-2xl font-black text-blue-600">+ ${remB}장 더</span>` : ''}</div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-none font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right ${pullLabel === '세로' ? 'text-yellow-400' : 'text-slate-400'} mr-2 text-[10px]"></i> ${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div></div>`;
+                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} ${totalCutCount}컷</span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? floorB+'회' : n+'장'}</span>${isGoal && remB > 0 ? `<span class="text-2xl font-black text-blue-600">+ ${remB}장 더</span>` : ''}</div><div class="${pullLabel === '가로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-none font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right mr-2 text-[10px]"></i> ${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div></div>`;
                 container.appendChild(card);
-                
-                // 1회 끝장 로직: 수량이 완성되면 다음 카드 생략
                 if (isGoal && n >= Q) break;
             }
             if (!isFromHistory) saveToHistory(W, H, rIn ? R : '', p1Raw, p2Raw, (isGoal ? goalN : 0), doneTotal, Q, pullLabel);
@@ -459,7 +457,7 @@
             document.getElementById('q_goal').value = data.q_goal || ''; calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
-        function confirmDeleteIndividual(event, id) { event.stopPropagation(); haptic(10); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-trash-can text-red-500"></i>'; document.getElementById('modalTitle').innerText = '항목 삭제'; confirmBtn.innerText = '삭제'; confirmBtn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-none text-sm'; confirmBtn.onclick = () => { historyData = historyData.filter(d => d.id !== id); saveToLocal(); modal.style.display = 'none'; showToast("삭제되었습니다."); }; modal.style.display = 'flex'; }
+        function confirmDeleteIndividual(event, id) { event.stopPropagation(); haptic(10); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-trash-can text-red-500"></i>'; document.getElementById('modalTitle').innerText = '삭제'; confirmBtn.innerText = '삭제'; confirmBtn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-none text-sm'; confirmBtn.onclick = () => { historyData = historyData.filter(d => d.id !== id); saveToLocal(); modal.style.display = 'none'; showToast("삭제되었습니다."); }; modal.style.display = 'flex'; }
         function confirmClearAll(event) { if(event) event.stopPropagation(); haptic(20); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>'; document.getElementById('modalTitle').innerText = '전체 삭제'; confirmBtn.innerText = '전체 삭제'; confirmBtn.className = 'flex-1 py-3 bg-slate-900 text-white font-bold rounded-none text-sm'; confirmBtn.onclick = () => { historyData = []; saveToLocal(); modal.style.display = 'none'; showToast("초기화되었습니다."); }; modal.style.display = 'flex'; }
         function handleEnter(event, isLast = false) { if (event.key === 'Enter') { calculate(); if (isLast) document.activeElement.blur(); } }
         function fmt(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
