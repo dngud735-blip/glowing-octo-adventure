@@ -3,49 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>PVC Mesh Cutting Calculator</title>
+    <title>PVC Mesh Cutting Calculator (AI)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-slate-50">
 
     <div id="toast"></div>
 
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 z-[110] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl border-0">
+            <h3 class="text-xl font-black mb-4 text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-key text-blue-500"></i> AI API 설정
+            </h3>
+            <p class="text-slate-500 text-xs mb-4 leading-relaxed font-medium">Gemini API 키를 입력하면 사진에서 치수를 자동으로 추출할 수 있습니다.</p>
+            <input type="password" id="apiKeyInput" placeholder="API 키를 입력하세요" class="w-full mb-6 border-b-2 border-slate-200 focus:border-blue-500 outline-none py-2 text-sm">
+            <div class="flex gap-3">
+                <button onclick="closeSettings()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">닫기</button>
+                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl text-sm">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center">
+            <div id="modalIcon" class="mb-4 text-4xl"></div>
+            <h3 id="modalTitle" class="text-xl font-black mb-2 text-slate-800"></h3>
+            <p id="modalDesc" class="text-slate-500 text-sm mb-6 font-medium leading-relaxed"></p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm">취소</button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 text-white font-bold rounded-xl text-sm active:scale-95"></button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
-        <div class="bg-slate-900 text-white flex items-center justify-center relative font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
-            <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
-            <div class="absolute right-4 cursor-pointer text-lg" onclick="openSettings()">
-                <i class="fa-solid fa-gear"></i>
-            </div>
+        <div class="bg-slate-900 text-white flex items-center justify-between px-5 font-black uppercase text-[11px] tracking-[0.25em] h-[48px] rounded-t-[24px] shadow-lg border-b border-slate-700">
+            <span>PVC Mesh Cutting Calculator</span>
+            <button onclick="openSettings()" class="text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-gear text-lg"></i>
+            </button>
         </div>
 
-        <div id="settingsModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center p-6 backdrop-blur-sm">
-            <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl">
-                <h3 class="text-xl font-black mb-2 text-slate-800">AI 설정</h3>
-                <p class="text-xs text-slate-500 mb-4 font-bold">Google AI Studio에서 받은 API Key를 입력하세요.</p>
-                <input type="password" id="apiKeyInput" placeholder="API Key 입력" class="w-full p-3 border-2 border-slate-200 rounded-xl mb-4 text-center font-bold focus:border-blue-500 outline-none">
-                <div class="flex gap-2">
-                    <button onclick="closeSettings()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-black">취소</button>
-                    <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-black shadow-md">저장</button>
+        <main class="bg-white rounded-b-[24px] shadow-md p-4 border border-slate-100 border-t-0 flex flex-col gap-y-4">
+            
+            <div class="relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 hover:border-blue-400 transition-all p-4 bg-slate-50/50 text-center">
+                <input type="file" accept="image/*" onchange="processImage(this)" class="absolute inset-0 opacity-0 cursor-pointer z-10">
+                <div class="flex flex-col items-center gap-2 pointer-events-none">
+                    <div class="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-blue-500">
+                        <i class="fa-solid fa-camera text-lg"></i>
+                    </div>
+                    <span class="text-[13px] font-black text-slate-600 uppercase tracking-tight">사진 찍기 또는 파일 업로드</span>
                 </div>
             </div>
-        </div>
 
-        <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
-            <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
-                <div id="modalIcon" class="mb-4 text-4xl"></div>
-                <h3 id="modalTitle" class="text-xl font-black mb-2 text-slate-800"></h3>
-                <p id="modalDesc" class="text-slate-500 text-sm mb-6 font-medium leading-relaxed"></p>
-                <div class="flex gap-3">
-                    <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm active:bg-slate-200">취소</button>
-                    <button id="confirmDeleteBtn" class="flex-1 py-3 text-white font-bold rounded-xl text-sm active:scale-95"></button>
+            <div id="aiListContainer" class="hidden space-y-3 animate-in border-b border-slate-100 pb-4">
+                <div class="flex items-center justify-between px-1">
+                    <span class="text-xs font-black text-blue-600 uppercase tracking-widest italic">AI Detection Results</span>
+                    <button onclick="closeAiList()" class="text-slate-300"><i class="fa-solid fa-xmark"></i></button>
                 </div>
+                <div id="aiItems" class="space-y-2"></div>
             </div>
-        </div>
 
-        <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
-            <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
+            <div class="grid grid-cols-4 gap-y-3 gap-x-3 items-center">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
                 <input type="number" id="p1_in" onkeydown="handleEnter(event)" class="border-amber-100">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p2_in'); i.value=''; i.focus(); haptic(10);">웨빙2</label>
@@ -63,7 +84,7 @@
 
                 <label class="grid-label text-rose-600 border-rose-200 bg-rose-50/30" onclick="const i=document.getElementById('q_goal'); i.value=''; i.focus(); haptic(10);">목표수량</label>
                 <div class="col-span-3">
-                    <input type="number" id="q_goal" onkeydown="handleEnter(event)" inputmode="decimal" style="border-bottom-width: 1px; border-top-width: 0px; border-left-width: 0px; border-right-width: 0px;">
+                    <input type="number" id="q_goal" onkeydown="handleEnter(event)" inputmode="decimal">
                 </div>
 
                 <label class="grid-label text-slate-600 border-slate-300 bg-slate-100/50" onclick="['q_done1','q_done2','q_done3'].forEach(id=>document.getElementById(id).value=''); document.getElementById('q_done1').focus(); haptic(10);">완료수량</label>
@@ -72,50 +93,30 @@
                 <input type="number" id="q_done3" onkeydown="handleEnter(event, true)" class="border-slate-200">
             </div>
 
-            <div class="mt-2 mb-1">
-                <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" onchange="processImage(this)">
-                <button onclick="document.getElementById('cameraInput').click()" class="w-full h-[46px] bg-amber-500 text-white rounded-lg font-black text-sm shadow-md flex items-center justify-center gap-2 active:scale-95 transition-all uppercase tracking-tight">
-                    <i class="fa-solid fa-camera text-lg"></i> 사진으로 분석하기
-                </button>
+            <div class="grid grid-cols-4 gap-x-3 mt-2">
+                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] border border-slate-300 tracking-tighter font-black">RESET</button>
+                <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg font-black uppercase">GENERATE PLAN</button>
             </div>
 
-            <div class="grid grid-cols-4 gap-x-2.5">
-                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 tracking-tighter font-black" style="border: 1px solid #d1d5db; border-radius: 0px;">
-                    RESET
-                </button>
-                <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase" style="border-radius: 0px;">
-                    GENERATE PLAN
-                </button>
-            </div>
-
-            <div id="errorBox" class="hidden p-2 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 mt-2">
+            <div id="errorBox" class="hidden p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
                 <i class="fa-solid fa-circle-exclamation text-red-500"></i>
                 <span id="errorMsg" class="text-xs font-bold text-red-700"></span>
             </div>
         </main>
 
-        <div id="aiListContainer" class="hidden px-1 py-4 space-y-3 w-full animate-in">
-            <div class="flex justify-between items-center px-2">
-                <span class="text-[12px] font-black text-blue-600 uppercase tracking-widest"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 인식 결과</span>
-                <button onclick="closeAiList()" class="text-slate-400 bg-slate-100 w-6 h-6 rounded-full flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div id="aiItems" class="space-y-2"></div>
-        </div>
-
         <div id="resultArea" class="hidden space-y-[40px] w-full pt-6">
-            <section id="summaryCardContainer" class="animate-in">
+            <section id="summaryCardContainer" class="animate-in px-1">
                 <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
-                    <div class="bg-slate-900 px-4 py-1.5 text-center border-b border-transparent">
+                    <div class="bg-slate-900 px-4 py-2 text-center">
                         <h2 id="summaryCardHeader" class="text-white font-black text-lg tracking-tight"></h2>
                     </div>
-                    <div class="p-2 space-y-2" id="summaryList"></div>
+                    <div class="p-3 space-y-2" id="summaryList"></div>
                 </div>
             </section>
-            
             <div id="cardsContainer" class="space-y-[40px] pb-12 px-1 flex flex-col items-center"></div>
         </div>
 
-        <footer id="historySection" class="w-full">
+        <footer id="historySection" class="w-full mt-6">
             <div class="flex items-center justify-between px-1 cursor-pointer py-4" onclick="toggleHistory()">
                 <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3">
                     <i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500 transition-transform"></i> History
@@ -127,6 +128,5 @@
     </div>
 
     <script src="script.js"></script>
-    <script src="ai-ocr.js"></script>
 </body>
 </html>
