@@ -29,10 +29,9 @@
         .app-container {
             width: 100%;
             max-width: 380px; 
-            position: relative; /* AI 톱니바퀴 등 위치를 위해 추가 */
+            position: relative;
         }
 
-        /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
         input[type="number"], input[type="text"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db;
@@ -72,7 +71,6 @@
             outline: none;
         }
 
-        /* 라벨 디자인: 하단 테두리만 유지, 상단/좌우 제거 */
         .grid-label {
             display: flex;
             align-items: center;
@@ -145,7 +143,6 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* --- 추가된 AI 기능 전용 CSS --- */
         #keyConfigArea { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
         #keyConfigArea.open { max-height: 150px; padding-bottom: 1rem; }
         
@@ -158,14 +155,12 @@
     <div id="toast"></div>
 
     <div class="app-container">
-        <!-- 타이틀 바 (톱니바퀴 추가) -->
         <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
             <div class="w-8"></div>
             <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
             <button onclick="toggleKeyConfig()" class="w-8 text-right text-slate-400 text-sm active:scale-90"><i class="fa-solid fa-gear"></i></button>
         </div>
 
-        <!-- API 키 설정 창 (추가) -->
         <div id="keyConfigArea" class="bg-slate-800 px-4">
             <div class="pt-3 text-center">
                 <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest">Gemini API Key (Local Storage)</p>
@@ -176,7 +171,6 @@
             </div>
         </div>
 
-        <!-- 삭제 모달 (원본 유지) -->
         <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
             <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
                 <div id="modalIcon" class="mb-4 text-4xl"></div>
@@ -189,7 +183,6 @@
             </div>
         </div>
 
-        <!-- AI 도구함 (추가) -->
         <section id="aiToolbox" class="bg-slate-50 border-x border-slate-100 px-3 pt-4">
             <div class="flex gap-2 mb-2">
                 <button onclick="document.getElementById('aiUpload').click()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition-all shadow-sm">
@@ -202,11 +195,10 @@
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">시각적 검증 리스트 (터치 시 즉시 계산)</span>
                     <button onclick="closeAIResultBox()" class="text-slate-300 text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <div id="aiInlineList" class="space-y-3 max-h-[800px] overflow-y-auto pr-1 pb-4"></div>
+                <div id="aiInlineList" class="space-y-4 max-h-[800px] overflow-y-auto pr-1 pb-4"></div>
             </div>
         </section>
 
-        <!-- 입력 섹션 (원본 100% 유지) -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
                 
@@ -225,13 +217,11 @@
                 <label class="grid-label text-indigo-600 border-indigo-200 bg-indigo-50/30" onclick="const i=document.getElementById('h_in'); i.value=''; i.focus(); haptic(10);">세로</label>
                 <input type="number" id="h_in" onkeydown="handleEnter(event)" inputmode="decimal" class="border-indigo-100">
 
-                <!-- 목표수량 -->
                 <label class="grid-label text-rose-600 border-rose-200 bg-rose-50/30" onclick="const i=document.getElementById('q_goal'); i.value=''; i.focus(); haptic(10);">목표수량</label>
                 <div class="col-span-3">
-                    <input type="number" id="q_goal" onkeydown="handleEnter(event)" inputmode="decimal" style="border-bottom-width: 1px; border-top-width: 0px; border-left-width: 0px; border-right-width: 0px;">
+                    <input type="number" id="q_goal" onkeydown="handleEnter(event)" inputmode="decimal" style="border-bottom-width: 1px;">
                 </div>
 
-                <!-- 완료수량 -->
                 <label class="grid-label text-slate-600 border-slate-300 bg-slate-100/50" onclick="['q_done1','q_done2','q_done3'].forEach(id=>document.getElementById(id).value=''); document.getElementById('q_done1').focus(); haptic(10);">완료수량</label>
                 <input type="number" id="q_done1" onkeydown="handleEnter(event)" class="border-slate-200">
                 <input type="number" id="q_done2" onkeydown="handleEnter(event)" class="border-slate-200">
@@ -239,12 +229,8 @@
             </div>
 
             <div class="grid grid-cols-4 gap-x-2.5">
-                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 tracking-tighter font-black" style="border: 1px solid #d1d5db; border-radius: 0px;">
-                    RESET
-                </button>
-                <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase" style="border-radius: 0px;">
-                    GENERATE PLAN
-                </button>
+                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] border border-slate-300 active:bg-slate-50 font-black">RESET</button>
+                <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase">GENERATE PLAN</button>
             </div>
 
             <div id="errorBox" class="hidden p-2 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
@@ -253,7 +239,6 @@
             </div>
         </main>
 
-        <!-- 히스토리 영역 (원본 유지) -->
         <footer id="historySection" class="w-full">
             <div class="flex items-center justify-between px-1 cursor-pointer py-4" onclick="toggleHistory()">
                 <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3">
@@ -264,7 +249,6 @@
             <div id="historyList" class="hidden space-y-4 px-1 pb-4"></div>
         </footer>
 
-        <!-- 결과 영역 (원본 유지) -->
         <div id="resultArea" class="hidden space-y-[40px] w-full pt-6">
             <section id="summaryCardContainer" class="animate-in">
                 <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
@@ -279,7 +263,6 @@
         </div>
     </div>
 
-    <!-- AI 로딩 모달 (추가) -->
     <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm text-center">
         <div class="flex flex-col items-center">
             <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
@@ -288,10 +271,9 @@
     </div>
 
     <script>
-        // === 전역 변수 병합 ===
         let historyData = [];
         let storedApiKey = localStorage.getItem('gemini_api_key_pvc') || "";
-        let aiSourceImg = new Image(); // 캔버스 크롭용 원본 이미지 객체
+        let aiSourceImg = new Image();
 
         window.onload = function() {
             if (storedApiKey) document.getElementById('api_key_field').value = storedApiKey;
@@ -299,7 +281,6 @@
             if (saved) { try { historyData = JSON.parse(saved); renderHistory(); } catch(e) { historyData = []; } }
         };
 
-        // === AI 도구 및 설정 로직 (새로 추가된 부분) ===
         function toggleKeyConfig() { document.getElementById('keyConfigArea').classList.toggle('open'); }
         function saveApiKey() {
             const val = document.getElementById('api_key_field').value.trim();
@@ -343,7 +324,6 @@
                 const base64DataUrl = await compressImage(file);
                 const b64Data = base64DataUrl.split(',')[1];
 
-                // 크롭을 위해 Image 객체에 로드 대기
                 await new Promise((resolve) => {
                     aiSourceImg.onload = resolve;
                     aiSourceImg.src = base64DataUrl;
@@ -365,11 +345,10 @@
                     })
                 });
                 
-                if (!response.ok) throw new Error("분석 실패 (API 키 또는 리퍼러 제한 확인)");
+                if (!response.ok) throw new Error("분석 실패");
                 const resJson = await response.json();
                 const list = JSON.parse(resJson.candidates[0].content.parts[0].text);
                 
-                // 1.60 -> 160 단위 자동 변환
                 const correctedList = list.map(item => ({
                     w: item.w < 10 ? Math.round(item.w * 100) : item.w,
                     h: item.h < 10 ? Math.round(item.h * 100) : item.h,
@@ -378,16 +357,18 @@
                 }));
 
                 renderAIInlineResults(correctedList);
-            } catch (err) { alert("분석 오류\n이유: " + err.message); }
+            } catch (err) { alert("분석 오류: " + err.message); }
             finally { document.getElementById('aiLoadingModal').style.display = 'none'; }
         }
 
+        // === 요청하신 AI 결과 리스트 (이미지 위 + 수치 아래 구조) ===
         function renderAIInlineResults(list) {
             const container = document.getElementById('aiInlineList');
             container.innerHTML = '';
             list.forEach((item, i) => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-4 rounded-2xl border border-indigo-100 flex items-center gap-4 shadow-sm animate-in active:scale-95 transition-all cursor-pointer";
+                // flex-col로 변경하여 2행 구조를 만듭니다.
+                div.className = "bg-white p-3 rounded-2xl border border-indigo-100 flex flex-col items-center gap-3 shadow-sm animate-in active:scale-95 transition-all cursor-pointer";
                 div.onclick = () => {
                     document.getElementById('w_in').value = item.w;
                     document.getElementById('h_in').value = item.h;
@@ -395,24 +376,22 @@
                     document.getElementById('q_done1').value = '';
                     document.getElementById('q_done2').value = '';
                     document.getElementById('q_done3').value = '';
-                    haptic(30); showToast("치수 자동 입력 및 계산 실행");
+                    haptic(30); showToast("치수 자동 입력");
                     calculate();
                     setTimeout(() => { document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
                 };
                 
-                // 💡 완벽한 Canvas 기반 이미지 크롭 (잘림 방지 패딩 추가)
                 let snippetImgSrc = '';
                 if (item.box && item.box.length === 4) {
                     try {
                         const [ymin, xmin, ymax, xmax] = item.box;
                         const canvas = document.createElement('canvas');
-                        canvas.width = 120;
+                        canvas.width = 160; 
                         canvas.height = 80;
                         const ctx = canvas.getContext('2d');
 
-                        // 상하좌우 여유 공간(Padding) 확보
-                        const padX = (xmax - xmin) * 0.2; 
-                        const padY = (ymax - ymin) * 0.2;
+                        const padX = (xmax - xmin) * 0.25; 
+                        const padY = (ymax - ymin) * 0.25;
                         const p_xmin = Math.max(0, xmin - padX);
                         const p_ymin = Math.max(0, ymin - padY);
                         const p_xmax = Math.min(1000, xmax + padX);
@@ -423,7 +402,7 @@
                         const sWidth = ((p_xmax - p_xmin) / 1000) * aiSourceImg.width;
                         const sHeight = ((p_ymax - p_ymin) / 1000) * aiSourceImg.height;
 
-                        ctx.fillStyle = '#f1f5f9';
+                        ctx.fillStyle = '#f8fafc';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                         const scale = Math.min(canvas.width / sWidth, canvas.height / sHeight);
@@ -439,15 +418,20 @@
                     snippetImgSrc = aiSourceImg.src;
                 }
 
+                // 사진(위) + 수치 정보(아래) HTML
                 div.innerHTML = `
-                    <div class="shrink-0 w-[120px] h-[80px] rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-50 flex items-center justify-center">
-                        <img src="${snippetImgSrc}" class="max-w-full max-h-full object-contain">
+                    <div class="w-full h-[90px] rounded-xl overflow-hidden border border-slate-200 bg-slate-50 flex items-center justify-center">
+                        <img src="${snippetImgSrc}" class="w-full h-full object-cover">
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-3xl font-black text-slate-800 tabular-nums leading-none tracking-tighter truncate">${item.w} <small class="text-slate-300 text-2xl font-light mx-0.5">x</small> ${item.h}</p>
-                        <div class="mt-2 flex items-center justify-between">
-                             <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Match</span>
-                             <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-sm ml-0.5 text-rose-400 font-bold">장</small></span>
+                    <div class="w-full flex items-center justify-between px-1">
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-3xl font-black text-slate-900 tabular-nums tracking-tighter">${item.w}</span>
+                            <span class="text-slate-300 text-xl font-light">×</span>
+                            <span class="text-3xl font-black text-slate-900 tabular-nums tracking-tighter">${item.h}</span>
+                        </div>
+                        <div class="flex flex-col items-end">
+                             <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">MATCH</span>
+                             <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-xs ml-0.5 text-rose-400 font-bold uppercase">장</small></span>
                         </div>
                     </div>
                 `;
@@ -456,10 +440,8 @@
             document.getElementById('aiResultBox').classList.add('open');
             haptic(40);
         }
+
         function closeAIResultBox() { document.getElementById('aiResultBox').classList.remove('open'); }
-
-
-        // === 여기부터 르르님의 원본 JS 코드입니다. (단 한 줄도 수정하지 않음) ===
 
         function haptic(ms = 20) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(ms); }
         function showToast(msg) {
@@ -507,16 +489,11 @@
             list.innerHTML = historyData.map(data => {
                 const isVertical = data.pull_label === '세로';
                 const badgeClass = isVertical ? 'bg-slate-900 text-white border-slate-700' : 'bg-slate-100 text-slate-500 border border-slate-200';
-                
                 let webbingParts = [];
                 if (data.p1_in) webbingParts.push(`W1 : ${data.p1_in}`);
                 if (data.p2_in) webbingParts.push(`W2 : ${data.p2_in}`);
                 let webbingText = webbingParts.join(' / ');
-                
-                const webbingBadge = webbingText.trim() 
-                    ? `<span class="text-[12px] text-amber-600 font-black border border-amber-100 bg-amber-50 px-2 py-0.5 rounded ml-2 shadow-sm">${webbingText}</span>` 
-                    : '';
-                    
+                const webbingBadge = webbingText.trim() ? `<span class="text-[12px] text-amber-600 font-black border border-amber-100 bg-amber-50 px-2 py-0.5 rounded ml-2 shadow-sm">${webbingText}</span>` : '';
                 return `
                 <div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 history-card w-full" onclick="fillFormFromHistory(${data.id})">
                     <div class="flex items-start justify-between">
@@ -527,9 +504,7 @@
                                 <span class="text-blue-600 text-xl font-black">폭 ${data.r_in || '-'}</span>
                             </div>
                             <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="${badgeClass} text-[12px] px-2.5 py-1 rounded-lg font-black uppercase">
-                                    ${data.pull_label || '-'} 당김
-                                </span>
+                                <span class="${badgeClass} text-[12px] px-2.5 py-1 rounded-lg font-black uppercase">${data.pull_label || '-'} 당김</span>
                                 ${webbingBadge}
                             </div>
                             <div class="mt-3">
@@ -540,9 +515,7 @@
                                 </span>
                             </div>
                         </div>
-                        <button onclick="confirmDeleteIndividual(event, ${data.id})" class="text-slate-300 hover:text-red-500 p-1">
-                            <i class="fa-solid fa-circle-xmark text-4xl"></i>
-                        </button>
+                        <button onclick="confirmDeleteIndividual(event, ${data.id})" class="text-slate-300 hover:text-red-500 p-1"><i class="fa-solid fa-circle-xmark text-4xl"></i></button>
                     </div>
                 </div>`;
             }).join('');
@@ -553,13 +526,11 @@
             haptic(25);
             document.getElementById('w_in').value = data.w_in;
             document.getElementById('h_in').value = data.h_in;
-            document.getElementById('r_in').value = (data.r_in === '' || data.r_in === 0) ? '' : data.r_in;
+            document.getElementById('r_in').value = data.r_in || '';
             document.getElementById('p1_in').value = data.p1_in || '';
             document.getElementById('p2_in').value = data.p2_in || '';
             document.getElementById('q_goal').value = data.q_goal || '';
             document.getElementById('q_done1').value = data.d_total || '';
-            document.getElementById('q_done2').value = '';
-            document.getElementById('q_done3').value = '';
             calculate(true); 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -569,36 +540,26 @@
         function confirmDeleteIndividual(event, id) {
             event.stopPropagation(); haptic(10);
             const modal = document.getElementById('deleteModal');
-            const confirmBtn = document.getElementById('confirmDeleteBtn');
             document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-trash-can text-red-500"></i>';
             document.getElementById('modalTitle').innerText = '항목 삭제';
-            document.getElementById('modalDesc').innerText = '선택한 작업 기록을 히스토리에서\n삭제하시겠습니까?';
-            confirmBtn.innerText = '삭제하기';
-            confirmBtn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-sm active:scale-95 shadow-md';
-            confirmBtn.onclick = () => { 
-                historyData = historyData.filter(d => d.id !== id); 
-                saveToLocal(); 
-                modal.style.display = 'none'; 
-                showToast("항목이 삭제되었습니다."); 
-            };
+            document.getElementById('modalDesc').innerText = '기록을 삭제하시겠습니까?';
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.innerText = '삭제하기';
+            btn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-sm';
+            btn.onclick = () => { historyData = historyData.filter(d => d.id !== id); saveToLocal(); modal.style.display = 'none'; };
             modal.style.display = 'flex';
         }
 
         function confirmClearAll(event) {
-            if(event) event.stopPropagation(); haptic(20); 
+            event.stopPropagation(); haptic(20); 
             const modal = document.getElementById('deleteModal');
-            const confirmBtn = document.getElementById('confirmDeleteBtn');
             document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>';
-            document.getElementById('modalTitle').innerText = '전체 히스토리 삭제';
-            document.getElementById('modalDesc').innerText = '모든 히스토리가 영구적으로 삭제됩니다.\n정말로 초기화하시겠습니까?';
-            confirmBtn.innerText = '전체 삭제';
-            confirmBtn.className = 'flex-1 py-3 bg-slate-900 text-white font-bold rounded-xl text-sm active:scale-95 shadow-md';
-            confirmBtn.onclick = () => { 
-                historyData = []; 
-                saveToLocal(); 
-                modal.style.display = 'none'; 
-                showToast("모든 기록이 초기화되었습니다."); 
-            };
+            document.getElementById('modalTitle').innerText = '전체 삭제';
+            document.getElementById('modalDesc').innerText = '모든 기록이 삭제됩니다.';
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.innerText = '전체 삭제';
+            btn.className = 'flex-1 py-3 bg-slate-900 text-white font-bold rounded-xl text-sm';
+            btn.onclick = () => { historyData = []; saveToLocal(); modal.style.display = 'none'; };
             modal.style.display = 'flex';
         }
 
@@ -606,27 +567,18 @@
         function fmt(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
         function fmtSpecial(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
         function hideError() { document.getElementById('errorBox').classList.add('hidden'); }
-        function showError(msg) { const box = document.getElementById('errorBox'); document.getElementById('errorMsg').innerText = msg; box.classList.remove('hidden'); document.getElementById('resultArea').classList.add('hidden'); }
+        function showError(msg) { document.getElementById('errorMsg').innerText = msg; document.getElementById('errorBox').classList.remove('hidden'); }
 
-        // AI 창 닫는 기능이 추가된 원본 리셋 함수
         function resetForm() { 
             haptic(15); 
             document.querySelectorAll('input').forEach(i => i.value = ''); 
             hideError(); 
             document.getElementById('resultArea').classList.add('hidden'); 
             closeAIResultBox();
-            
-            const list = document.getElementById('historyList');
-            const icon = document.getElementById('historyIcon');
-            if (!list.classList.contains('hidden')) {
-                list.classList.add('hidden');
-                icon.style.transform = 'rotate(0deg)';
-            }
         }
 
         function getChipStyle(val) {
-            const s = val.toString();
-            const digitCount = s.replace(/[^0-9]/g, '').length; 
+            const digitCount = val.toString().replace(/[^0-9]/g, '').length; 
             if (digitCount <= 3) return 'style="font-size: 1.45rem; border-color: currentColor;"'; 
             if (digitCount === 4) return 'style="font-size: 1.25rem; border-color: currentColor;"';
             return 'style="font-size: 1.05rem; border-color: currentColor;"'; 
@@ -641,7 +593,7 @@
             const hIn = document.getElementById('h_in').value;
             const goalIn = document.getElementById('q_goal').value; 
             if (!wIn || !hIn) { showError("치수를 입력해 주세요."); return; }
-            const W = parseFloat(wIn); const H = parseFloat(hIn); const R = rIn ? parseFloat(rIn) : H; const P1_val = parseFloat(p1Raw); const P2_val = parseFloat(p2Raw);
+            const W = parseFloat(wIn), H = parseFloat(hIn), R = rIn ? parseFloat(rIn) : H, P1_val = parseFloat(p1Raw), P2_val = parseFloat(p2Raw);
             const isGoal = (goalIn && goalIn.trim() !== "");
             let goalN = 0, doneTotal = 0, Q = 0;
             if (isGoal) {
@@ -650,7 +602,7 @@
                 Q = goalN - doneTotal;
                 if (Q < 0) { showError("완료 수량이 목표를 초과했습니다."); return; }
             }
-            const wasteW = (R < W) ? 99999 : (R - W); const wasteH = (R < H) ? 99999 : (R - H);
+            const wasteW = (R < W) ? 99999 : (R - W), wasteH = (R < H) ? 99999 : (R - H);
             if (wasteW === 99999 && wasteH === 99999) { showError("폭 부족으로 불가."); return; }
             let FIX, PULL, finalWaste, fixLabel, pullLabel;
             if (wasteH <= wasteW) { FIX = H; PULL = W; finalWaste = wasteH; fixLabel = "세로"; pullLabel = "가로"; } 
@@ -659,7 +611,6 @@
             let minCuts = 999999;
             for (let n = 2; n <= 10; n++) {
                 if (isGoal && Q > 0 && n > Q) break;
-
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) continue; 
                 let curB = isGoal ? Math.ceil(Q / n) : 1;
                 let totalCutCount = n + curB + (finalWaste > 0 ? 1 : 0);
@@ -697,41 +648,27 @@
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
             for (let n = 2; n <= 10; n++) {
                 if (isGoal && Q > 0 && n > Q) break;
-
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
-                
-                let floorB = isGoal ? Math.floor(Q / n) : 1; 
-                let remB = isGoal ? (Q % n) : 0;
-                
+                let floorB = isGoal ? Math.floor(Q / n) : 1, remB = isGoal ? (Q % n) : 0;
                 let curB_for_cut = isGoal ? Math.ceil(Q / n) : 1; 
                 let totalCutCount = n + curB_for_cut + (finalWaste > 0 ? 1 : 0);
                 const isRec = isGoal && (totalCutCount === minCuts);
-                
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL * i));
                 let centers = []; for(let i=0; i<n; i++) centers.push(fmtSpecial((PULL/2) + (PULL * i)));
                 let thirds = []; for(let i=0; i<n; i++) { let b = PULL * i; thirds.push(Math.round(b + PULL/3)); thirds.push(Math.round(b + PULL*2/3)); }
                 let s4 = []; for(let i=0; i<n; i++) { let b = PULL * i; s4.push(fmtSpecial(b + PULL/4)); s4.push(fmtSpecial(b + PULL*3/4)); }
-                
                 let dWeb = []; if (!isNaN(P1_val) && P1_val <= PULL) dWeb.push(P1_val); if (!isNaN(P2_val) && P2_val <= PULL) dWeb.push(P2_val);
-                let pts = []; 
-                if (dWeb.length > 0) {
-                    for(let i=0; i<n; i++) { let b = PULL * i; dWeb.forEach(vp => pts.push(fmtSpecial(b + vp))); } 
-                    pts.sort((a,b)=>a-b);
-                }
+                let pts = []; if (dWeb.length > 0) { for(let i=0; i<n; i++) { let b = PULL * i; dWeb.forEach(vp => pts.push(fmtSpecial(b + vp))); } pts.sort((a,b)=>a-b); }
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
-                
-                // 원본 가위 로직 보존 영역
                 const scissorsIcons = finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400 mr-1"></i><i class="fa-solid fa-cut mr-1 text-yellow-400"></i>' : '<i class="fa-solid fa-cut mr-1 text-yellow-400"></i>';
 
-                let htmlContent = `
-                <div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent">
+                card.innerHTML = `
+                <div class="px-5 py-3 bg-slate-900 flex items-center justify-between">
                     <div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div>
                     <div class="flex items-center gap-3">
                         ${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}
-                        <span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">
-                            ${scissorsIcons} ${totalCutCount}컷
-                        </span>
+                        <span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${scissorsIcons} ${totalCutCount}컷</span>
                     </div>
                 </div>
                 <div class="px-5 pt-4 pb-3 bg-white">
@@ -744,76 +681,54 @@
                     </div>
                     <div class="flex items-center justify-between gap-1 mt-4">
                         <span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>
-                        ${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center"><span class="text-[14px] uppercase tracking-tighter block truncate leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}
+                        ${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center"><span class="text-[14px] uppercase tracking-tighter block truncate leading-none"><span class="text-slate-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}
                     </div>
                 </div>
                 <div class="px-5 py-2 space-y-2">
                     <div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm">
-                        <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md">
-                            <i class="fa-solid fa-ruler-combined"></i>
-                        </div>
-                        <p class="text-5xl font-black leading-none flex-1 text-center">
-                            <span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span>
-                            <span class="text-slate-900 text-3xl ml-1">cm</span>
-                        </p>
+                        <div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div>
+                        <p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p>
                     </div>
-                    
                     <div class="space-y-2 pt-2 pb-5">
                         <div class="flex flex-col gap-2 mb-2">
                             <span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span>
                             <div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
                         </div>
-
                         <div>
                             <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-violet-500 transition-colors">
                                 <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-crosshairs mr-1.5 text-[10px]"></i> Centers</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
                             </button>
-                            <div class="hidden pt-2">
-                                <div class="grid grid-cols-4 gap-2.5">${centers.map(c => `<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
-                            </div>
+                            <div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${centers.map(c => `<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div>
                         </div>
-
                         <div>
                             <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-emerald-600 transition-colors">
                                 <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-bars-staggered mr-1.5 text-[10px]"></i> 3-Parts</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
                             </button>
-                            <div class="hidden pt-2">
-                                <div class="grid grid-cols-4 gap-2.5">${thirds.map(t => `<span class="data-chip text-emerald-900" ${getChipStyle(t)}>${t}</span>`).join('')}</div>
-                            </div>
+                            <div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${thirds.map(t => `<span class="data-chip text-emerald-900" ${getChipStyle(t)}>${t}</span>`).join('')}</div></div>
                         </div>
-
                         <div>
                             <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-blue-500 transition-colors">
                                 <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-border-all mr-1.5 text-[10px]"></i> 4-Parts</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
                             </button>
-                            <div class="hidden pt-2">
-                                <div class="grid grid-cols-4 gap-2.5">${s4.map(p => `<span class="data-chip text-blue-600" ${getChipStyle(p)}>${p}</span>`).join('')}</div>
-                            </div>
+                            <div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${s4.map(p => `<span class="data-chip text-blue-600" ${getChipStyle(p)}>${p}</span>`).join('')}</div></div>
                         </div>
-
                         <div>
                             <button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-amber-600 transition-colors">
                                 <span class="font-black text-[11px] uppercase tracking-widest"><i class="fa-solid fa-grip-lines mr-1.5 text-[10px]"></i> Webbing</span>
                                 <i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i>
                             </button>
-                            <div class="hidden pt-2">
-                                ${pts.length > 0 ? `<div class="grid grid-cols-4 gap-2.5">${pts.map(p => `<span class="data-chip text-amber-900" ${getChipStyle(p)}>${p}</span>`).join('')}</div>` : ''}
-                            </div>
+                            <div class="hidden pt-2">${pts.length > 0 ? `<div class="grid grid-cols-4 gap-2.5">${pts.map(p => `<span class="data-chip text-amber-900" ${getChipStyle(p)}>${p}</span>`).join('')}</div>` : ''}</div>
                         </div>
                     </div>
                 </div>`;
-                
-                card.innerHTML = htmlContent; container.appendChild(card);
+                container.appendChild(card);
             }
             if (!isFromHistory) saveToHistory(W, H, rIn ? R : '', p1Raw, p2Raw, (isGoal ? goalN : 0), doneTotal, Q, pullLabel);
-            
             document.body.appendChild(document.getElementById('historySection'));
         }
     </script>
 </body>
 </html>
-
-
