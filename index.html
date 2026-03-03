@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>PVC Mesh AI Calculator PRO</title>
+    <title>PVC Mesh Cutting Master AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         :root { --primary: #2563eb; --bg-main: #f8fafc; }
-        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: var(--bg-main); color: #1e293b; padding: 4px 14px 40px; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: 'Inter', 'Noto Sans KR', sans-serif; background-color: var(--bg-main); color: #1e293b; padding: 4px 14px 40px; display: flex; flex-direction: column; align-items: center; -webkit-font-smoothing: antialiased; }
         .app-container { width: 100%; max-width: 380px; }
-        input[type="number"], input[type="password"] { -webkit-appearance: none; border-bottom: 1px solid #d1d5db; border-top: none; border-left: none; border-right: none; border-radius: 0px; padding: 0px; font-size: 1.2rem; font-weight: 700; text-align: center; width: 100%; height: 42px; background-color: #fff; outline: none; }
-        .grid-label { display: flex; align-items: center; justify-content: center; height: 42px; width: 100%; font-weight: 800; font-size: 13px; border-bottom: 1px solid currentColor; cursor: pointer; transition: all 0.2s; }
-        .data-chip { display: inline-flex; align-items: center; justify-content: center; padding: 8px 1px; border-radius: 10px; font-weight: 900; width: 100%; background: #ffffff; border: 2.5px solid currentColor; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
-        .action-btn { height: 42px; width: 100%; display: flex; align-items: center; justify-content: center; font-weight: 900; text-transform: uppercase; }
-        #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 100px; font-size: 0.95rem; font-weight: 700; z-index: 9999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
+        input[type="number"], input[type="password"] { -webkit-appearance: none; border-bottom: 1px solid #d1d5db; border-top: none; border-left: none; border-right: none; border-radius: 0px; padding: 0px; font-size: 1.2rem; font-weight: 700; text-align: center; width: 100%; height: 42px; line-height: 42px; color: #1e293b; background-color: #ffffff; outline: none; transition: all 0.2s; }
+        input:focus { border-bottom-color: #3b82f6; }
+        .grid-label { display: flex; align-items: center; justify-content: center; height: 42px; width: 100%; border-radius: 0px; font-weight: 800; font-size: 13px; border-bottom: 1px solid currentColor; cursor: pointer; user-select: none; transition: all 0.2s; white-space: nowrap; opacity: 0.85; }
+        .grid-label:active { background-color: rgba(0,0,0,0.05); }
+        .data-chip { display: inline-flex; align-items: center; justify-content: center; padding: 8px 1px; border-radius: 10px; font-weight: 900; width: 100%; letter-spacing: -0.04em; background: #ffffff; border: 2.5px solid currentColor; box-shadow: 0 2px 4px rgba(0,0,0,0.06); transition: transform 0.1s; }
+        .action-btn { height: 42px; width: 100%; display: flex; align-items: center; justify-content: center; border-radius: 0px; font-weight: 900; text-transform: uppercase; border: none; outline: none; transition: all 0.2s; }
+        #toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; padding: 12px 24px; border-radius: 100px; font-size: 0.95rem; font-weight: 700; z-index: 9999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
         .animate-in { animation: slideUp 0.3s ease-out forwards; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .history-card { transition: all 0.2s ease; border-left: 10px solid #cbd5e1; }
+        .history-card { border-left: 10px solid #cbd5e1; transition: all 0.2s; }
+        ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
 <body>
@@ -27,72 +30,79 @@
 
     <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 z-[110] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl">
-            <h3 class="text-xl font-black mb-4 text-slate-800">AI API Key</h3>
-            <input type="password" id="apiKeyInput" placeholder="Gemini API Key" class="mb-6">
+            <h3 class="text-xl font-black mb-4 text-slate-800">AI API Setting</h3>
+            <p class="text-xs text-slate-500 mb-4">Gemini API 키를 입력하세요.</p>
+            <input type="password" id="apiKeyInput" placeholder="Key Input..." class="mb-6 w-full">
             <div class="flex gap-3">
-                <button onclick="closeSettings()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">닫기</button>
-                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">저장</button>
+                <button onclick="closeSettings()" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">Close</button>
+                <button onclick="saveSettings()" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">Save</button>
             </div>
         </div>
     </div>
 
     <div class="app-container">
         <div class="bg-slate-900 text-white flex items-center justify-between px-5 h-[36px] rounded-t-[24px] shadow-lg border-b border-slate-700">
-            <span class="font-black text-[11px] tracking-widest">PVC MESH AI CALCULATOR</span>
-            <button onclick="openSettings()" class="text-slate-400"><i class="fa-solid fa-gear"></i></button>
+            <span class="font-black text-[11px] tracking-[0.25em] uppercase leading-none transform translate-y-[1px]">PVC Mesh AI Master</span>
+            <button onclick="openSettings()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-gear"></i></button>
         </div>
 
-        <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 flex flex-col gap-y-3">
-            <div class="relative overflow-hidden rounded-xl border-2 border-dashed border-slate-200 p-3 bg-slate-50/50 text-center">
+        <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
+            <div class="relative overflow-hidden rounded-xl border-2 border-dashed border-slate-200 p-3 bg-slate-50/50 text-center hover:border-blue-400 transition-colors">
                 <input type="file" accept="image/*" onchange="processImage(this)" class="absolute inset-0 opacity-0 cursor-pointer z-10">
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-1 pointer-events-none">
                     <i class="fa-solid fa-camera text-blue-500 text-xl"></i>
-                    <span class="text-[11px] font-black text-slate-500 uppercase">AI Photo Extraction</span>
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-tighter">AI Photo Data Extraction</span>
                 </div>
             </div>
 
-            <div id="aiListContainer" class="hidden space-y-2 pb-3 border-b">
+            <div id="aiListContainer" class="hidden space-y-2 pb-2 border-b">
                 <div id="aiItems" class="space-y-2"></div>
             </div>
 
-            <div class="grid grid-cols-4 gap-2.5 items-center">
-                <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
-                <input type="number" id="p1_in">
-                <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p2_in'); i.value=''; i.focus(); haptic(10);">웨빙2</label>
-                <input type="number" id="p2_in">
-                <label class="grid-label text-emerald-600 border-emerald-200 bg-emerald-50/30">원단 폭</label>
-                <div class="col-span-3"><input type="number" id="r_in"></div>
-                <label class="grid-label text-indigo-600 border-indigo-200 bg-indigo-50/30">가로</label>
-                <input type="number" id="w_in">
-                <label class="grid-label text-indigo-600 border-indigo-200 bg-indigo-50/30">세로</label>
-                <input type="number" id="h_in">
-                <label class="grid-label text-rose-600 border-rose-200 bg-rose-50/30">목표수량</label>
-                <div class="col-span-3"><input type="number" id="q_goal"></div>
-                <label class="grid-label text-slate-600 border-slate-300 bg-slate-100/50">완료수량</label>
-                <input type="number" id="q_done1"><input type="number" id="q_done2"><input type="number" id="q_done3">
+            <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
+                <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="resetIn('p1_in')">웨빙1</label>
+                <input type="number" id="p1_in" onkeydown="handleEnter(event)">
+                <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="resetIn('p2_in')">웨빙2</label>
+                <input type="number" id="p2_in" onkeydown="handleEnter(event)">
+
+                <label class="grid-label text-emerald-600 border-emerald-200 bg-emerald-50/30" onclick="resetIn('r_in')">원단 폭</label>
+                <div class="col-span-3"><input type="number" id="r_in" onkeydown="handleEnter(event)" inputmode="decimal"></div>
+
+                <label class="grid-label text-indigo-600 border-indigo-200 bg-indigo-50/30" onclick="resetIn('w_in')">가로</label>
+                <input type="number" id="w_in" onkeydown="handleEnter(event)" inputmode="decimal">
+                <label class="grid-label text-indigo-600 border-indigo-200 bg-indigo-50/30" onclick="resetIn('h_in')">세로</label>
+                <input type="number" id="h_in" onkeydown="handleEnter(event)" inputmode="decimal">
+
+                <label class="grid-label text-rose-600 border-rose-200 bg-rose-50/30" onclick="resetIn('q_goal')">목표수량</label>
+                <div class="col-span-3"><input type="number" id="q_goal" onkeydown="handleEnter(event)" inputmode="decimal"></div>
+
+                <label class="grid-label text-slate-600 border-slate-300 bg-slate-100/50" onclick="resetDone()">완료수량</label>
+                <input type="number" id="q_done1" class="border-slate-200"><input type="number" id="q_done2" class="border-slate-200"><input type="number" id="q_done3" class="border-slate-200" onkeydown="handleEnter(event, true)">
             </div>
 
-            <div class="grid grid-cols-4 gap-2">
-                <button onclick="resetForm()" class="col-span-1 action-btn bg-white border border-slate-300 text-[11px] font-black">RESET</button>
+            <div class="grid grid-cols-4 gap-x-2.5">
+                <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] border border-slate-300 font-black tracking-tighter">RESET</button>
                 <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg font-black uppercase">GENERATE PLAN</button>
             </div>
-            <div id="errorBox" class="hidden p-2 bg-red-50 text-red-700 text-xs font-bold rounded-lg"></div>
+            <div id="errorBox" class="hidden p-2 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-circle-exclamation text-red-500"></i><span id="errorMsg" class="text-xs font-bold text-red-700"></span>
+            </div>
         </main>
 
-        <div id="resultArea" class="hidden space-y-10 w-full pt-6">
+        <div id="resultArea" class="hidden space-y-[40px] w-full pt-6">
             <section id="summaryCardContainer" class="animate-in">
-                <div class="bg-white border rounded-[24px] overflow-hidden shadow-md">
-                    <div class="bg-slate-900 p-1.5 text-center text-white font-black" id="summaryCardHeader"></div>
+                <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
+                    <div class="bg-slate-900 px-4 py-1.5 text-center"><h2 id="summaryCardHeader" class="text-white font-black text-lg"></h2></div>
                     <div class="p-2 space-y-2" id="summaryList"></div>
                 </div>
             </section>
-            <div id="cardsContainer" class="space-y-10 pb-12 px-1 flex flex-col items-center"></div>
+            <div id="cardsContainer" class="space-y-[40px] pb-12 px-1 flex flex-col items-center"></div>
         </div>
 
-        <footer id="historySection" class="w-full mt-4">
+        <footer id="historySection" class="w-full">
             <div class="flex items-center justify-between px-1 py-4 cursor-pointer" onclick="toggleHistory()">
-                <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest"><i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500 mr-2"></i>History</h2>
-                <button onclick="confirmClearAll(event)" class="text-sm font-black text-red-400 uppercase">Clear All</button>
+                <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest"><i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500 transition-transform"></i> History</h2>
+                <button onclick="confirmClearAll(event)" class="text-sm font-black text-red-400 px-3 uppercase">Clear All</button>
             </div>
             <div id="historyList" class="hidden space-y-4 px-1 pb-4"></div>
         </footer>
@@ -101,33 +111,38 @@
     <script>
         let historyData = [];
         window.onload = () => {
-            const saved = localStorage.getItem('pvc_mesh_v4');
+            const saved = localStorage.getItem('pvc_mesh_master_v5');
             if(saved) { try { historyData = JSON.parse(saved); renderHistory(); } catch(e) { historyData = []; } }
         };
 
         function haptic(ms=20) { if(window.navigator.vibrate) window.navigator.vibrate(ms); }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2000); }
+        function resetIn(id) { const i = document.getElementById(id); i.value = ''; i.focus(); haptic(10); }
+        function resetDone() { ['q_done1','q_done2','q_done3'].forEach(id=>document.getElementById(id).value=''); document.getElementById('q_done1').focus(); haptic(10); }
+
         function openSettings() { document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || ''; document.getElementById('settingsModal').style.display = 'flex'; }
         function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
-        function saveSettings() { localStorage.setItem('gemini_api_key', document.getElementById('apiKeyInput').value.trim()); closeSettings(); showToast("저장 완료"); }
+        function saveSettings() { localStorage.setItem('gemini_api_key', document.getElementById('apiKeyInput').value.trim()); closeSettings(); showToast("API Key Saved."); }
 
-        /* AI 기능 */
         async function processImage(input) {
             const file = input.files[0]; const key = localStorage.getItem('gemini_api_key');
-            if(!key) { alert("API 키를 입력하세요!"); return; }
+            if(!key) { alert("API 키가 없습니다."); return; }
             if(!file) return;
             showToast("AI 분석 중... 🔍");
             try {
                 const base64 = await resizeImage(file, 1024);
                 const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: "Extract list as JSON array: [{\"w\":120, \"h\":200, \"q\":5}]. Output ONLY JSON." }, { inline_data: { mime_type: "image/jpeg", data: base64.split(',')[1] } }] }] })
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: "Extract numbers from image as JSON array: [{\"w\":120, \"h\":200, \"q\":5}]. Output ONLY JSON." }, { inline_data: { mime_type: "image/jpeg", data: base64.split(',')[1] } }] }],
+                        safetySettings: [{category:"HARM_CATEGORY_DANGEROUS_CONTENT", threshold:"BLOCK_NONE"}]
+                    })
                 });
                 const d = await resp.json();
                 const json = JSON.parse(d.candidates[0].content.parts[0].text.match(/\[.*\]/s)[0]);
                 renderAiList(json, file);
-                showToast("분석 성공!");
-            } catch(e) { showToast("분석 실패"); }
+                showToast("추출 완료!");
+            } catch(e) { showToast("분석 실패."); }
             input.value = '';
         }
 
@@ -150,126 +165,110 @@
 
         function renderAiList(items, file) {
             const cont = document.getElementById('aiItems'); document.getElementById('aiListContainer').classList.remove('hidden'); cont.innerHTML = '';
-            items.forEach(item => {
-                const div = document.createElement('div'); div.className = "bg-white p-3 rounded-xl border border-blue-100 flex justify-between items-center cursor-pointer active:bg-blue-50";
+            const imgUrl = URL.createObjectURL(file);
+            items.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-3 rounded-xl border border-blue-100 flex justify-between items-center cursor-pointer active:scale-95 transition-transform";
                 div.onclick = () => { document.getElementById('w_in').value = item.w; document.getElementById('h_in').value = item.h; document.getElementById('q_goal').value = item.q; calculate(); };
-                div.innerHTML = `<div><span class="font-black text-lg">${item.w} X ${item.h}</span><div class="text-xs font-bold text-blue-500">${item.q}장 목표</div></div><i class="fa-solid fa-chevron-right text-slate-200"></i>`;
+                div.innerHTML = `<div class="flex items-center gap-3"><div class="w-10 h-10 bg-slate-100 rounded-lg overflow-hidden relative"><img src="${imgUrl}" class="absolute scale-[2] origin-center opacity-60"></div><div><div class="text-lg font-black">${item.w} X ${item.h}</div><div class="text-[11px] font-bold text-blue-500">${item.q}장 목표</div></div></div><i class="fa-solid fa-chevron-right text-slate-200"></i>`;
                 cont.appendChild(div);
             });
         }
 
-        /* 오리지널 계산 엔진 (복구 완료) */
-        function fmt(n) { return (n % 1 === 0) ? n : parseFloat(n.toFixed(1)); }
-        function getChipStyle(v) { return v.toString().length > 3 ? 'style="font-size: 1.1rem; border-color: currentColor;"' : 'style="font-size: 1.4rem; border-color: currentColor;"'; }
+        /* MASTER ENGINE START */
+        function fmt(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
+        function getChipStyle(val) { const s = val.toString().replace(/[^0-9]/g, '').length; if (s <= 3) return 'style="font-size: 1.45rem; border-color: currentColor;"'; if (s === 4) return 'style="font-size: 1.25rem; border-color: currentColor;"'; return 'style="font-size: 1.05rem; border-color: currentColor;"'; }
 
         function calculate(isFromHistory = false) {
             haptic(30); hideError(); document.activeElement.blur();
             const wIn = document.getElementById('w_in').value; const hIn = document.getElementById('h_in').value;
-            if(!wIn || !hIn) return;
+            if(!wIn || !hIn) { showError("치수를 입력하세요."); return; }
             const W = parseFloat(wIn); const H = parseFloat(hIn);
             const rIn = document.getElementById('r_in').value; const R = rIn ? parseFloat(rIn) : (H > W ? H : W);
             const P1 = parseFloat(document.getElementById('p1_in').value); const P2 = parseFloat(document.getElementById('p2_in').value);
-            const goal = parseFloat(document.getElementById('q_goal').value) || 0;
-            const done = (parseFloat(document.getElementById('q_done1').value)||0) + (parseFloat(document.getElementById('q_done2').value)||0) + (parseFloat(document.getElementById('q_done3').value)||0);
-            const Q = goal - done;
+            const goalN = parseFloat(document.getElementById('q_goal').value) || 0;
+            const doneN = (parseFloat(document.getElementById('q_done1').value)||0) + (parseFloat(document.getElementById('q_done2').value)||0) + (parseFloat(document.getElementById('q_done3').value)||0);
+            const Q = goalN - doneN;
 
-            const wasteW = R < W ? 9999 : R - W; const wasteH = R < H ? 9999 : R - H;
-            if(wasteW === 9999 && wasteH === 9999) { showError("폭 부족"); return; }
-            
+            const wasteW = R < W ? 99999 : R - W; const wasteH = R < H ? 99999 : R - H;
+            if(wasteW === 99999 && wasteH === 99999) { showError("폭 부족으로 제작 불가."); return; }
+
             let FIX, PULL, waste, fixL, pullL;
             if(wasteH <= wasteW) { FIX = H; PULL = W; waste = wasteH; fixL = "세로"; pullL = "가로"; }
             else { FIX = W; PULL = H; waste = wasteW; fixL = "가로"; pullL = "세로"; }
 
-            // 추천 로직 (최소 컷)
-            let minCuts = 9999;
+            let minCuts = 99999;
             for(let n=2; n<=10; n++) {
-                if(goal > 0 && n > Q && Q > 0) break;
+                if(goalN > 0 && n > Q && Q > 0) break;
                 if((PULL*n)+2 > 1200) continue;
-                let cuts = n + (goal > 0 ? Math.ceil(Q/n) : 1) + (waste > 0 ? 1 : 0);
-                if(cuts < minCuts) minCuts = cuts;
+                let curB = goalN > 0 ? Math.ceil(Q/n) : 1;
+                let totalC = n + curB + (waste > 0 ? 1 : 0);
+                if(totalC < minCuts) minCuts = totalC;
             }
 
             document.getElementById('resultArea').classList.remove('hidden');
-            document.getElementById('summaryCardHeader').innerText = `${fixL} ${FIX} Fixed`;
-            const mWeb = [!isNaN(P1) && P1<=FIX?fmt(P1):null, !isNaN(P2) && P2<=FIX?fmt(P2):null].filter(v=>v!==null).join('/') || '-';
-            
+            document.getElementById('summaryCardHeader').innerHTML = `<i class="fa-solid fa-thumbtack text-sm mr-1"></i> ${fixL} ${fmt(FIX)} Fixed`;
+            const masterWeb = [!isNaN(P1) && P1 <= FIX ? fmt(P1) : null, !isNaN(P2) && P2 <= FIX ? fmt(P2) : null].filter(v => v !== null).join(' / ') || '-';
+
             document.getElementById('summaryList').innerHTML = `
-                <div class="bg-slate-50 p-2 rounded-xl border flex justify-between items-center"><span class="text-[10px] font-black text-slate-400 uppercase">Trim</span><span class="text-xl font-black text-slate-800">폭 ${fmt(R)} - ${fmt(FIX)} = <span class="text-red-500">${fmt(waste)}cm</span></span></div>
-                <div class="grid grid-cols-2 gap-2 mt-1">
-                    <div class="bg-violet-50/50 p-2 rounded-xl text-center"><span class="text-[11px] font-black text-violet-400 block">CENTER</span><span class="text-lg font-black text-violet-700">${fmt(FIX/2)}</span></div>
-                    <div class="bg-emerald-50/50 p-2 rounded-xl text-center"><span class="text-[11px] font-black text-emerald-600 block">3-PART</span><span class="text-lg font-black text-emerald-900">${Math.round(FIX/3)}/${Math.round(FIX*2/3)}</span></div>
-                    <div class="bg-blue-50/50 p-2 rounded-xl text-center"><span class="text-[11px] font-black text-blue-400 block">4-PART</span><span class="text-lg font-black text-blue-600">${fmt(FIX*0.25)}/${fmt(FIX*0.75)}</span></div>
-                    <div class="bg-amber-50/50 p-2 rounded-xl text-center"><span class="text-[11px] font-black text-amber-600 block">WEBBING</span><span class="text-lg font-black text-amber-900">${mWeb}</span></div>
+                <div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between"><span class="text-[12px] font-black text-slate-400 uppercase tracking-widest leading-none">Trim</span><span class="text-2xl font-black text-slate-800 leading-none">폭 ${fmt(R)} - ${fmt(FIX)} = <span class="text-red-500">${fmt(waste)}cm</span></span></div>
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <div class="bg-violet-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-violet-400 uppercase block mb-0.5 leading-none">CENTER</span><span class="text-xl font-black text-violet-700 leading-none tabular-nums">${fmt(FIX/2)}</span></div>
+                    <div class="bg-emerald-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-emerald-600 uppercase block mb-0.5 leading-none">3-PART</span><span class="text-xl font-black text-emerald-900 leading-none tabular-nums">${Math.round(FIX/3)} / ${Math.round(FIX*2/3)}</span></div>
+                    <div class="bg-blue-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-blue-400 uppercase block mb-0.5 leading-none">4-PART</span><span class="text-xl font-black text-blue-600 leading-none tabular-nums">${fmt(FIX*0.25)} / ${fmt(FIX*0.75)}</span></div>
+                    <div class="bg-amber-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-amber-600 uppercase block mb-0.5 leading-none">WEBBING</span><span class="text-xl font-black text-amber-900 leading-none tabular-nums">${masterWeb}</span></div>
                 </div>`;
 
             const cont = document.getElementById('cardsContainer'); cont.innerHTML = '';
             for(let n=2; n<=10; n++) {
-                if(goal > 0 && n > Q && Q > 0) break;
-                let total = (PULL * n) + 2; if(total > 1200) break;
-                let curB = goal > 0 ? Math.ceil(Q/n) : 1;
+                if(goalN > 0 && n > Q && Q > 0) break;
+                let totalLen = (PULL * n) + 2; if(totalLen > 1200) break;
+                let curB = goalN > 0 ? Math.ceil(Q/n) : 1;
                 let totalC = n + curB + (waste > 0 ? 1 : 0);
-                const isRec = goal > 0 && totalC === minCuts;
+                const isRec = goalN > 0 && totalC === minCuts;
 
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL*i));
                 let cens = []; for(let i=0; i<n; i++) cens.push(fmt((PULL/2) + (PULL*i)));
                 let thrds = []; for(let i=0; i<n; i++) { let b=PULL*i; thrds.push(Math.round(b+PULL/3)); thrds.push(Math.round(b+PULL*2/3)); }
                 let s4 = []; for(let i=0; i<n; i++) { let b=PULL*i; s4.push(fmt(b+PULL/4)); s4.push(fmt(b+PULL*3/4)); }
-                let dW = []; if(!isNaN(P1) && P1<=PULL) dW.push(P1); if(!isNaN(P2) && P2<=PULL) dW.push(P2);
-                let pts = []; if(dW.length>0) { for(let i=0; i<n; i++) { let b=PULL*i; dW.forEach(v=>pts.push(fmt(b+v))); } pts.sort((a,b)=>a-b); }
+                let dWeb = []; if(!isNaN(P1) && P1<=PULL) dWeb.push(P1); if(!isNaN(P2) && P2<=PULL) dWeb.push(P2);
+                let pts = []; if(dWeb.length > 0) { for(let i=0; i<n; i++) { let b=PULL*i; dWeb.forEach(vp=>pts.push(fmt(b+vp))); } pts.sort((a,b)=>a-b); }
 
-                const div = document.createElement('div');
-                div.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec?'ring-2 ring-yellow-400':''}`;
-                div.innerHTML = `
-                    <div class="px-5 py-2 bg-slate-900 flex justify-between items-center text-white">
-                        <span class="text-2xl font-black">${W}X${H}</span>
-                        <span class="text-sm font-black uppercase text-yellow-400">${totalC} CUTS ${isRec?'🏆':''}</span>
-                    </div>
-                    <div class="p-4 bg-white">
-                        <div class="flex justify-between items-end mb-3">
-                            <span class="text-4xl font-black">${goal>0?Math.ceil(Q/n)+'회':n+'장'}</span>
-                            <span class="bg-slate-100 text-[11px] px-2 py-1 rounded font-black uppercase text-slate-500">${pullL} 당김</span>
-                        </div>
-                        <div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl text-center mb-4">
-                            <div class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Total Length</div>
-                            <div class="text-5xl font-black text-blue-600">${fmt(total)}<small class="text-2xl">cm</small></div>
-                        </div>
-                        <div class="space-y-3">
-                            <div>
-                                <span class="text-rose-600 font-black text-[11px] uppercase block mb-1">Cuts (1회 ${n}장)</span>
-                                <div class="grid grid-cols-4 gap-2">${cuts.map(c=>`<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
-                            </div>
-                            <div>
-                                <button onclick="toggleCardMarking(this)" class="w-full flex justify-between py-1 text-slate-400 items-center">
-                                    <span class="font-black text-[10px] uppercase">More Markers</span>
-                                    <i class="fa-solid fa-chevron-down text-[10px] chevron-icon"></i>
-                                </button>
-                                <div class="hidden pt-2 space-y-2">
-                                    <div class="grid grid-cols-4 gap-2">${cens.map(c=>`<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
-                                    <div class="grid grid-cols-4 gap-2">${thrds.map(c=>`<span class="data-chip text-emerald-800" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
-                                    <div class="grid grid-cols-4 gap-2">${s4.map(c=>`<span class="data-chip text-blue-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div>
-                                    <div class="grid grid-cols-4 gap-2">${pts.length?pts.map(c=>`<span class="data-chip text-amber-700" ${getChipStyle(c)}>${c}</span>`).join(''):''}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>`;
-                cont.appendChild(div);
+                const card = document.createElement('div');
+                card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400' : 'border-slate-100'}`;
+                card.innerHTML = `
+                <div class="px-5 py-3 bg-slate-900 flex items-center justify-between"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3"><span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${totalC} 컷 ${isRec?'🏆':''}</span></div></div>
+                <div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${goalN>0?Math.ceil(Q/n)+'회':n+'장'}</span></div><div class="${pullL==='세로'?'bg-slate-900 text-white':'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-xl font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right mr-2 text-[10px]"></i> ${pullL} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${goalN>0?`<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center text-[14px] uppercase truncate leading-none">잔여 ${Q}장</div>`:''}</div></div>
+                <div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div>
+                <div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c=>`<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div>
+                <div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-violet-500 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest italic">Centers</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button><div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${cens.map(c=>`<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div>
+                <div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-emerald-600 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest italic">3-Parts</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button><div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${thrds.map(c=>`<span class="data-chip text-emerald-900" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div>
+                <div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-blue-500 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest italic">4-Parts</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button><div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${s4.map(c=>`<span class="data-chip text-blue-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div>
+                <div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-amber-600 transition-colors"><span class="font-black text-[11px] uppercase tracking-widest italic">Webbing</span><i class="fa-solid fa-chevron-down text-[10px] transition-transform chevron-icon"></i></button><div class="hidden pt-2">${pts.length?`<div class="grid grid-cols-4 gap-2.5">${pts.map(c=>`<span class="data-chip text-amber-900" ${getChipStyle(c)}>${c}</span>`).join('')}</div>`:''}</div></div></div></div>`;
+                cont.appendChild(card);
             }
-            if(!isFromHistory) saveHistory(W,H,R,goal,Q,pullL);
+            if(!isFromHistory) saveHistory(W,H,R,goalN,doneN,Q,pullL);
         }
 
-        /* 공통 기능들 */
-        function toggleCardMarking(b) { const c = b.nextElementSibling; const h = c.classList.toggle('hidden'); b.querySelector('.chevron-icon').style.transform = h?'rotate(0deg)':'rotate(180deg)'; }
-        function saveHistory(w,h,r,g,q,l) { historyData.unshift({id:Date.now(),w,h,r,g,q,l}); if(historyData.length>30) historyData.pop(); localStorage.setItem('pvc_mesh_v4', JSON.stringify(historyData)); renderHistory(); }
+        /* UI/HISTORY 로직 */
+        function toggleCardMarking(btn) { const c = btn.nextElementSibling; const h = c.classList.toggle('hidden'); btn.querySelector('.chevron-icon').style.transform = h?'rotate(0deg)':'rotate(180deg)'; haptic(10); }
+        function saveHistory(w,h,r,g,d,q,l) { historyData.unshift({id:Date.now(), w,h,r,g,d,q,l}); if(historyData.length>30) historyData.pop(); localStorage.setItem('pvc_mesh_master_v5', JSON.stringify(historyData)); renderHistory(); }
         function renderHistory() {
-            const l = document.getElementById('historyList');
-            l.innerHTML = historyData.map(d => `<div class="bg-white p-4 rounded-2xl shadow-sm border history-card mb-2" onclick="fillForm(${d.id})"><div class="font-black text-xl">${d.w}X${d.h}</div><div class="text-xs text-blue-500">폭 ${d.r} | 잔여 ${d.q}</div></div>`).join('');
+            const list = document.getElementById('historyList');
+            if(historyData.length===0) { list.innerHTML='<p class="p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-sm italic">Empty History</p>'; return; }
+            list.innerHTML = historyData.map(d=>`<div class="bg-white p-5 rounded-[24px] shadow-sm border history-card mb-3" onclick="fillForm(${d.id})"><div class="flex justify-between items-start"><div><div class="text-2xl font-black text-slate-900 tabular-nums">${d.w} X ${d.h}</div><div class="text-[11px] font-black text-blue-600 uppercase mt-1">폭 ${d.r} | 잔여 ${d.q}장</div></div><button onclick="confirmDel(event, ${d.id})" class="text-slate-200 hover:text-red-500"><i class="fa-solid fa-circle-xmark text-2xl"></i></button></div></div>`).join('');
         }
-        function fillForm(id) { const d = historyData.find(x=>x.id===id); document.getElementById('w_in').value=d.w; document.getElementById('h_in').value=d.h; document.getElementById('r_in').value=d.r; document.getElementById('q_goal').value=d.g; calculate(true); window.scrollTo({top:0,behavior:'smooth'}); }
-        function toggleHistory() { const h = document.getElementById('historyList').classList.toggle('hidden'); document.getElementById('historyIcon').style.transform = h?'rotate(0deg)':'rotate(180deg)'; }
-        function showError(m) { const b = document.getElementById('errorBox'); b.innerText = m; b.classList.remove('hidden'); }
+        function fillForm(id) {
+            const d = historyData.find(x=>x.id===id); if(!d) return;
+            document.getElementById('w_in').value=d.w; document.getElementById('h_in').value=d.h; document.getElementById('r_in').value=d.r; document.getElementById('q_goal').value=d.g; document.getElementById('q_done1').value=d.d; calculate(true); window.scrollTo({top:0,behavior:'smooth'}); haptic(25);
+        }
+        function toggleHistory() { const h = document.getElementById('historyList').classList.toggle('hidden'); document.getElementById('historyIcon').style.transform = h?'rotate(0deg)':'rotate(180deg)'; haptic(15); }
+        function handleEnter(e, l=false) { if(e.key==='Enter') { calculate(); if(l) document.activeElement.blur(); } }
+        function showError(m) { const b = document.getElementById('errorBox'); document.getElementById('errorMsg').innerText = m; b.classList.remove('hidden'); document.getElementById('resultArea').classList.add('hidden'); }
         function hideError() { document.getElementById('errorBox').classList.add('hidden'); }
-        function resetForm() { document.querySelectorAll('input').forEach(i=>i.value=''); document.getElementById('resultArea').classList.add('hidden'); hideError(); }
-        function confirmClearAll(e) { e.stopPropagation(); historyData=[]; localStorage.removeItem('pvc_mesh_v4'); renderHistory(); }
+        function resetForm() { document.querySelectorAll('input').forEach(i=>i.value=''); hideError(); document.getElementById('resultArea').classList.add('hidden'); haptic(15); }
+        function confirmClearAll(e) { e.stopPropagation(); if(confirm("히스토리를 모두 삭제할까요?")) { historyData=[]; localStorage.removeItem('pvc_mesh_master_v5'); renderHistory(); } }
+        function confirmDel(e, id) { e.stopPropagation(); historyData=historyData.filter(x=>x.id!==id); localStorage.setItem('pvc_mesh_master_v5', JSON.stringify(historyData)); renderHistory(); showToast("삭제됨"); }
     </script>
 </body>
 </html>
