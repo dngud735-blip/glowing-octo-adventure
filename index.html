@@ -180,14 +180,13 @@
                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">데이터 선택 (터치 시 입력)</span>
                     <button onclick="closeAiResult()" class="text-slate-400 p-1"><i class="fa-solid fa-circle-xmark text-lg"></i></button>
                 </div>
-                <div id="photoResultList" class="bg-slate-50 border border-slate-200 divide-y divide-slate-100 max-h-[280px] overflow-y-auto"></div>
+                <div id="photoResultList" class="bg-slate-50 border border-slate-200 divide-y divide-slate-100 max-h-[280px] overflow-y-auto shadow-inner"></div>
             </div>
         </div>
 
         <!-- 메인 입력 섹션 -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
-                
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
                 <input type="number" id="p1_in" onkeydown="handleEnter(event)" class="border-amber-100">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p2_in'); i.value=''; i.focus(); haptic(10);">웨빙2</label>
@@ -256,8 +255,8 @@
     </div>
 
     <script>
-        // [중요] 깃허브 사용 시 아래 따옴표 안에 키를 입력하세요.
-        const apiKey = "AIzaSyAEvKy8bOz_JHzuOE7rabJ1xeoQsu1DPm8"; 
+        // [중요] 깃허브 사용 시 발급받으신 키를 아래 따옴표 안에 넣어주세요.
+        const apiKey = "AIzaSyAr7wmH50WZb9aHTDWbBiaArBsSTDbQ6xs"; 
         let historyData = [];
 
         window.onload = function() {
@@ -269,10 +268,10 @@
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.innerText = msg; toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 1500);
+            setTimeout(() => { toast.classList.remove('show'); }, 2000);
         }
 
-        // --- 분석 엔진 로직 (먹통 방지 & 정밀 파싱) ---
+        // --- 분석 엔진 로직 (지수 백오프 및 공식 문서 방식 적용) ---
         async function handlePhotoUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
@@ -283,11 +282,11 @@
 
             try {
                 const base64Image = await optimizeImage(file);
-                const response = await callGeminiOCR(base64Image);
+                const response = await callGeminiWithRetries(base64Image);
                 if (response && response.rows) {
                     renderAiList(response.rows);
                 } else {
-                    throw new Error("Invalid Data");
+                    throw new Error("Invalid Response Schema");
                 }
             } catch (err) {
                 console.error(err);
@@ -297,6 +296,50 @@
                 // 어떤 상황에서도 버튼 재활성화 (먹통 방지)
                 document.getElementById('photoBtn').disabled = false;
                 input.value = ''; 
+            }
+        }
+
+        async function callGeminiWithRetries(base64Data) {
+            const systemPrompt = "Extract cutting dimensions from the table in the image. Search for Width(옆), Height(높이), and Quantity(발주수량). Convert meter decimals (e.g. 1.22) to cm (122). Respond in JSON schema: {rows: [{w: number, h: number, q: number}]}";
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            for (let i = 0; i < delays.length; i++) {
+                try {
+                    const resp = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: "Extract table data." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] },
+                            generationConfig: { 
+                                responseMimeType: "application/json",
+                                responseSchema: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        rows: {
+                                            type: "ARRAY",
+                                            items: {
+                                                type: "OBJECT",
+                                                properties: {
+                                                    w: { type: "NUMBER" },
+                                                    h: { type: "NUMBER" },
+                                                    q: { type: "NUMBER" }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    });
+                    if (!resp.ok) throw new Error('API Error');
+                    const result = await resp.json();
+                    return JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+                } catch (e) {
+                    if (i === delays.length - 1) throw e;
+                    await new Promise(r => setTimeout(r, delays[i]));
+                }
             }
         }
 
@@ -320,30 +363,6 @@
                 };
                 reader.readAsDataURL(file);
             });
-        }
-
-        async function callGeminiOCR(base64Data) {
-            const prompt = "Extract columns '가로(옆)', '세로(높이)', '발주수량' from the table in image. Convert meters to cm. Respond in pure JSON format ONLY: {'rows': [{'w': 100, 'h': 200, 'q': 5}]}. No conversation.";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-            for (let i = 0; i < 3; i++) {
-                try {
-                    const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }] })
-                    });
-                    if (!resp.ok) throw new Error('API Fail');
-                    const result = await resp.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    // AI의 답변에서 JSON 블록만 자석처럼 골라내는 정규식
-                    const match = text.match(/\{[\s\S]*\}/);
-                    return JSON.parse(match[0]);
-                } catch (e) {
-                    if (i === 2) throw e;
-                    await new Promise(r => setTimeout(r, 1000 * (i + 1)));
-                }
-            }
         }
 
         function renderAiList(rows) {
@@ -427,7 +446,7 @@
             document.body.appendChild(document.getElementById('historySection'));
         }
 
-        // --- UI 기본 기능 ---
+        // --- UI 유틸리티 ---
         function toggleHistory() { const list = document.getElementById('historyList'); const icon = document.getElementById('historyIcon'); const isHidden = list.classList.toggle('hidden'); icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)'; haptic(15); }
         function saveToLocal() { localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
         function renderHistory() {
