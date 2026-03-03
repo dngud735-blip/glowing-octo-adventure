@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+:root {
+    --primary: #2563eb;
+    --bg-main: #f8fafc;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans KR', sans-serif;
+    background-color: var(--bg-main);
+    color: #1e293b;
+    padding: 4px 14px 40px;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    overflow-x: hidden;
+}
+
+.app-container {
+    width: 100%;
+    max-width: 380px; 
+}
+
+/* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
+input[type="number"] {
+    -webkit-appearance: none;
+    border-bottom: 1px solid #d1d5db;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-radius: 0px;
+    padding: 0px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: center;
+    width: 100%;
+    height: 42px; 
+    line-height: 42px;
+    transition: all 0.2s ease;
+    color: #1e293b;
+    background-color: #ffffff;
+    outline: none;
+}
+
+input[type="number"]:focus {
+    border-bottom-color: #9ca3af;
+    background-color: #fff;
+}
+
+.action-btn {
+    height: 42px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0px;
+    font-weight: 900;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    border: none;
+    outline: none;
+}
+
+/* 라벨 디자인: 하단 테두리만 유지, 상단/좌우 제거 */
+.grid-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 42px;
+    width: 100%;
+    border-radius: 0px;
+    font-weight: 800;
+    font-size: 13px;
+    border-bottom: 1px solid currentColor;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-align: center;
+    opacity: 0.85; 
+}
+
+.grid-label:active {
+    opacity: 1;
+    background-color: rgba(0,0,0,0.05);
+}
+
+.data-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 1px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 900; 
+    width: 100%;
+    letter-spacing: -0.04em;
+    background: #ffffff; 
+    border-width: 2.5px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06); 
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: slideUp 0.3s ease-out forwards; }
+
+.history-card {
+    transition: all 0.2s ease;
+    border-left: 10px solid #cbd5e1;
+}
+
+#toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+#toast.show { opacity: 1; transform: translate(-50%, -20px); }
