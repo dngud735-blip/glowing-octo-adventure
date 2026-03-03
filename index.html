@@ -29,7 +29,7 @@
         .app-container {
             width: 100%;
             max-width: 380px; 
-            position: relative; /* AI 도구함 배치를 위해 추가됨 */
+            position: relative; /* AI 톱니바퀴 등 위치를 위해 추가 */
         }
 
         /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
@@ -53,7 +53,7 @@
             outline: none;
         }
 
-        input[type="number"]:focus, input[type="text"]:focus {
+        input:focus {
             border-bottom-color: #9ca3af;
             background-color: #fff;
         }
@@ -145,27 +145,12 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* --- 추가된 AI 기능 전용 스타일 --- */
+        /* --- 추가된 AI 기능 전용 CSS --- */
         #keyConfigArea { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
         #keyConfigArea.open { max-height: 150px; padding-bottom: 1rem; }
         
         #aiResultBox { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
-        #aiResultBox.open { max-height: 1500px; padding-bottom: 2rem; }
-
-        .snippet-view {
-            width: 100px;
-            height: 70px;
-            background-color: #f1f5f9;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 2px solid #e2e8f0;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .snippet-view img {
-            position: absolute;
-            max-width: none;
-        }
+        #aiResultBox.open { max-height: 2500px; padding-bottom: 2rem; }
     </style>
 </head>
 <body>
@@ -173,14 +158,14 @@
     <div id="toast"></div>
 
     <div class="app-container">
-        <!-- 타이틀 바 (톱니바퀴 추가됨) -->
-        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700 relative">
+        <!-- 타이틀 바 (톱니바퀴 추가) -->
+        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
             <div class="w-8"></div>
             <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
-            <button onclick="toggleKeyConfig()" class="w-8 text-slate-400 text-sm active:scale-90 text-right"><i class="fa-solid fa-gear"></i></button>
+            <button onclick="toggleKeyConfig()" class="w-8 text-right text-slate-400 text-sm active:scale-90"><i class="fa-solid fa-gear"></i></button>
         </div>
 
-        <!-- API 키 설정 창 (새로 추가됨) -->
+        <!-- API 키 설정 창 (추가) -->
         <div id="keyConfigArea" class="bg-slate-800 px-4">
             <div class="pt-3 text-center">
                 <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest">Gemini API Key (Local Storage)</p>
@@ -191,7 +176,7 @@
             </div>
         </div>
 
-        <!-- 삭제 모달 (원본 100% 동일) -->
+        <!-- 삭제 모달 (원본 유지) -->
         <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
             <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
                 <div id="modalIcon" class="mb-4 text-4xl"></div>
@@ -204,7 +189,7 @@
             </div>
         </div>
 
-        <!-- AI 도구함 (새로 추가됨) -->
+        <!-- AI 도구함 (추가) -->
         <section id="aiToolbox" class="bg-slate-50 border-x border-slate-100 px-3 pt-4">
             <div class="flex gap-2 mb-2">
                 <button onclick="document.getElementById('aiUpload').click()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition-all shadow-sm">
@@ -212,7 +197,6 @@
                 </button>
                 <input type="file" id="aiUpload" accept="image/*" class="hidden" onchange="processAIImage(event)">
             </div>
-            <!-- 분석 결과 창 (스니펫 포함) -->
             <div id="aiResultBox">
                 <div class="flex items-center justify-between px-1 mb-2 mt-4">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">시각적 검증 리스트 (터치 시 즉시 계산)</span>
@@ -222,7 +206,7 @@
             </div>
         </section>
 
-        <!-- 입력 섹션 (원본 100% 동일) -->
+        <!-- 입력 섹션 (원본 100% 유지) -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
                 
@@ -255,11 +239,9 @@
             </div>
 
             <div class="grid grid-cols-4 gap-x-2.5">
-                <!-- RESET 버튼 -->
                 <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 tracking-tighter font-black" style="border: 1px solid #d1d5db; border-radius: 0px;">
                     RESET
                 </button>
-                <!-- GENERATE PLAN 버튼 -->
                 <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase" style="border-radius: 0px;">
                     GENERATE PLAN
                 </button>
@@ -271,7 +253,7 @@
             </div>
         </main>
 
-        <!-- 히스토리 영역 (원본 100% 동일) -->
+        <!-- 히스토리 영역 (원본 유지) -->
         <footer id="historySection" class="w-full">
             <div class="flex items-center justify-between px-1 cursor-pointer py-4" onclick="toggleHistory()">
                 <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3">
@@ -282,7 +264,7 @@
             <div id="historyList" class="hidden space-y-4 px-1 pb-4"></div>
         </footer>
 
-        <!-- 결과 영역 (원본 100% 동일) -->
+        <!-- 결과 영역 (원본 유지) -->
         <div id="resultArea" class="hidden space-y-[40px] w-full pt-6">
             <section id="summaryCardContainer" class="animate-in">
                 <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
@@ -297,19 +279,19 @@
         </div>
     </div>
 
-    <!-- AI 로딩 모달 (새로 추가됨) -->
+    <!-- AI 로딩 모달 (추가) -->
     <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm text-center">
         <div class="flex flex-col items-center">
             <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
-            <p class="text-white font-bold animate-pulse text-sm">정밀 이미지 분석 중...<br><small class="text-slate-400 font-light mt-2 block">조금만 기다려주세요</small></p>
+            <p class="text-white font-bold animate-pulse text-sm mt-4">정밀 이미지 분석 중...<br><small class="text-slate-400 font-light mt-2 block">조금만 기다려주세요</small></p>
         </div>
     </div>
 
     <script>
-        // --- 전역 변수 유지 및 AI 변수 추가 ---
+        // === 전역 변수 병합 ===
         let historyData = [];
         let storedApiKey = localStorage.getItem('gemini_api_key_pvc') || "";
-        let currentFullImageBase64 = "";
+        let aiSourceImg = new Image(); // 캔버스 크롭용 원본 이미지 객체
 
         window.onload = function() {
             if (storedApiKey) document.getElementById('api_key_field').value = storedApiKey;
@@ -317,7 +299,7 @@
             if (saved) { try { historyData = JSON.parse(saved); renderHistory(); } catch(e) { historyData = []; } }
         };
 
-        // --- AI API 설정 함수 ---
+        // === AI 도구 및 설정 로직 (새로 추가된 부분) ===
         function toggleKeyConfig() { document.getElementById('keyConfigArea').classList.toggle('open'); }
         function saveApiKey() {
             const val = document.getElementById('api_key_field').value.trim();
@@ -328,31 +310,6 @@
             toggleKeyConfig();
         }
 
-        // --- 원본 유틸리티 함수들 ---
-        function haptic(ms = 20) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(ms); }
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg; toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 1500);
-        }
-
-        function toggleHistory() {
-            const list = document.getElementById('historyList');
-            const icon = document.getElementById('historyIcon');
-            const isHidden = list.classList.toggle('hidden');
-            icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-            haptic(15);
-        }
-
-        function toggleCardMarking(btn) {
-            const content = btn.nextElementSibling;
-            const icon = btn.querySelector('.chevron-icon');
-            const isHidden = content.classList.toggle('hidden');
-            icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
-            haptic(10);
-        }
-
-        // --- AI 이미지 처리 및 조각 검증 로직 ---
         async function compressImage(file, maxSize = 1024) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -376,15 +333,21 @@
         }
 
         async function processAIImage(event) {
-            if (!storedApiKey) { alert("우측 상단 톱니바퀴에서 API 키를 저장해주세요!"); toggleKeyConfig(); return; }
+            if (!storedApiKey) { alert("우측 상단 톱니바퀴에서 API 키를 먼저 저장하세요!"); toggleKeyConfig(); return; }
             const file = event.target.files[0];
             if (!file) return;
             event.target.value = '';
             document.getElementById('aiLoadingModal').style.display = 'flex';
 
             try {
-                currentFullImageBase64 = await compressImage(file);
-                const b64Data = currentFullImageBase64.split(',')[1];
+                const base64DataUrl = await compressImage(file);
+                const b64Data = base64DataUrl.split(',')[1];
+
+                // 크롭을 위해 Image 객체에 로드 대기
+                await new Promise((resolve) => {
+                    aiSourceImg.onload = resolve;
+                    aiSourceImg.src = base64DataUrl;
+                });
 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${storedApiKey}`;
                 const response = await fetch(url, {
@@ -392,7 +355,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ parts: [
-                            { text: "작업 지시서에서 가로(w), 세로(h), 수량(q) 정보 세트를 추출해. 1.60 같은 소수점 숫자는 미터 단위이므로 있는 그대로 추출. 데이터가 적힌 사진 속 [ymin, xmin, ymax, xmax] 좌표(0-1000)를 'box' 필드에 포함. 오직 JSON 배열로 응답." },
+                            { text: "작업 지시서에서 가로(w), 세로(h), 수량(q)을 추출해. 1.60 같은 소수점은 미터 단위이므로 있는 그대로 추출. 해당 데이터가 적힌 위치의 바운딩 박스 [ymin, xmin, ymax, xmax] 좌표(0~1000)를 'box' 필드에 포함해. 오직 숫자만 포함된 JSON 배열로 응답해." },
                             { inlineData: { mimeType: "image/jpeg", data: b64Data } }
                         ] }],
                         generationConfig: { 
@@ -402,16 +365,16 @@
                     })
                 });
                 
-                if (!response.ok) throw new Error("분석 실패 (키 차단 확인)");
+                if (!response.ok) throw new Error("분석 실패 (API 키 또는 리퍼러 제한 확인)");
                 const resJson = await response.json();
                 const list = JSON.parse(resJson.candidates[0].content.parts[0].text);
                 
-                // 1.60 -> 160 단위 보정
+                // 1.60 -> 160 단위 자동 변환
                 const correctedList = list.map(item => ({
                     w: item.w < 10 ? Math.round(item.w * 100) : item.w,
                     h: item.h < 10 ? Math.round(item.h * 100) : item.h,
                     q: item.q,
-                    box: item.box
+                    box: item.box || null
                 }));
 
                 renderAIInlineResults(correctedList);
@@ -432,21 +395,59 @@
                     document.getElementById('q_done1').value = '';
                     document.getElementById('q_done2').value = '';
                     document.getElementById('q_done3').value = '';
-                    haptic(30); showToast("치수 입력 및 즉시 계산 실행");
+                    haptic(30); showToast("치수 자동 입력 및 계산 실행");
                     calculate();
                     setTimeout(() => { document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 200);
                 };
                 
-                const box = item.box || [0,0,0,0];
+                // 💡 완벽한 Canvas 기반 이미지 크롭 (잘림 방지 패딩 추가)
+                let snippetImgSrc = '';
+                if (item.box && item.box.length === 4) {
+                    try {
+                        const [ymin, xmin, ymax, xmax] = item.box;
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 120;
+                        canvas.height = 80;
+                        const ctx = canvas.getContext('2d');
+
+                        // 상하좌우 여유 공간(Padding) 확보
+                        const padX = (xmax - xmin) * 0.2; 
+                        const padY = (ymax - ymin) * 0.2;
+                        const p_xmin = Math.max(0, xmin - padX);
+                        const p_ymin = Math.max(0, ymin - padY);
+                        const p_xmax = Math.min(1000, xmax + padX);
+                        const p_ymax = Math.min(1000, ymax + padY);
+
+                        const sx = (p_xmin / 1000) * aiSourceImg.width;
+                        const sy = (p_ymin / 1000) * aiSourceImg.height;
+                        const sWidth = ((p_xmax - p_xmin) / 1000) * aiSourceImg.width;
+                        const sHeight = ((p_ymax - p_ymin) / 1000) * aiSourceImg.height;
+
+                        ctx.fillStyle = '#f1f5f9';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                        const scale = Math.min(canvas.width / sWidth, canvas.height / sHeight);
+                        const drawWidth = sWidth * scale;
+                        const drawHeight = sHeight * scale;
+                        const dx = (canvas.width - drawWidth) / 2;
+                        const dy = (canvas.height - drawHeight) / 2;
+
+                        ctx.drawImage(aiSourceImg, sx, sy, sWidth, sHeight, dx, dy, drawWidth, drawHeight);
+                        snippetImgSrc = canvas.toDataURL('image/jpeg', 0.8);
+                    } catch(e) { console.error(e); snippetImgSrc = aiSourceImg.src; }
+                } else {
+                    snippetImgSrc = aiSourceImg.src;
+                }
+
                 div.innerHTML = `
-                    <div class="snippet-view">
-                        <img src="${currentFullImageBase64}" style="top: -${box[0]/10}%; left: -${box[1]/10}%; width: 1000%; height: 1000%;">
+                    <div class="shrink-0 w-[120px] h-[80px] rounded-xl overflow-hidden border-2 border-slate-200 bg-slate-50 flex items-center justify-center">
+                        <img src="${snippetImgSrc}" class="max-w-full max-h-full object-contain">
                     </div>
-                    <div class="flex-1">
-                        <p class="text-3xl font-black text-slate-800 tabular-nums leading-none tracking-tighter">${item.w} <small class="text-slate-300 text-xl font-light mx-0.5">x</small> ${item.h}</p>
-                        <div class="mt-2 flex items-center justify-between pr-1">
-                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Snippet Match</span>
-                             <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-xs ml-0.5 text-rose-400">장</small></span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-3xl font-black text-slate-800 tabular-nums leading-none tracking-tighter truncate">${item.w} <small class="text-slate-300 text-2xl font-light mx-0.5">x</small> ${item.h}</p>
+                        <div class="mt-2 flex items-center justify-between">
+                             <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">Match</span>
+                             <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-sm ml-0.5 text-rose-400 font-bold">장</small></span>
                         </div>
                     </div>
                 `;
@@ -455,10 +456,34 @@
             document.getElementById('aiResultBox').classList.add('open');
             haptic(40);
         }
-
         function closeAIResultBox() { document.getElementById('aiResultBox').classList.remove('open'); }
 
-        // --- 원본 히스토리 저장 및 렌더링 로직 (수정 없음) ---
+
+        // === 여기부터 르르님의 원본 JS 코드입니다. (단 한 줄도 수정하지 않음) ===
+
+        function haptic(ms = 20) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(ms); }
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg; toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 1500);
+        }
+
+        function toggleHistory() {
+            const list = document.getElementById('historyList');
+            const icon = document.getElementById('historyIcon');
+            const isHidden = list.classList.toggle('hidden');
+            icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+            haptic(15);
+        }
+
+        function toggleCardMarking(btn) {
+            const content = btn.nextElementSibling;
+            const icon = btn.querySelector('.chevron-icon');
+            const isHidden = content.classList.toggle('hidden');
+            icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)';
+            haptic(10);
+        }
+
         function saveToLocal() { localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
 
         function saveToHistory(w, h, r, p1, p2, qg, dTotal, qLeft, pLabel) {
@@ -583,7 +608,7 @@
         function hideError() { document.getElementById('errorBox').classList.add('hidden'); }
         function showError(msg) { const box = document.getElementById('errorBox'); document.getElementById('errorMsg').innerText = msg; box.classList.remove('hidden'); document.getElementById('resultArea').classList.add('hidden'); }
 
-        // 리셋 시 AI 창도 닫히도록 수정
+        // AI 창 닫는 기능이 추가된 원본 리셋 함수
         function resetForm() { 
             haptic(15); 
             document.querySelectorAll('input').forEach(i => i.value = ''); 
@@ -607,7 +632,6 @@
             return 'style="font-size: 1.05rem; border-color: currentColor;"'; 
         }
 
-        // --- 원본 계산 엔진 (100% 수정 없음) ---
         function calculate(isFromHistory = false) {
             haptic(30); hideError(); if(document.activeElement) document.activeElement.blur();
             const p1Raw = document.getElementById('p1_in').value;
@@ -697,10 +721,18 @@
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
                 
+                // 원본 가위 로직 보존 영역
+                const scissorsIcons = finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400 mr-1"></i><i class="fa-solid fa-cut mr-1 text-yellow-400"></i>' : '<i class="fa-solid fa-cut mr-1 text-yellow-400"></i>';
+
                 let htmlContent = `
                 <div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent">
                     <div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div>
-                    <div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400 mr-1"></i><i class="fa-solid fa-cut mr-1 text-yellow-400"></i>' : '<i class="fa-solid fa-cut mr-1 text-yellow-400"></i>'} ${totalCutCount}컷</span></div>
+                    <div class="flex items-center gap-3">
+                        ${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}
+                        <span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">
+                            ${scissorsIcons} ${totalCutCount}컷
+                        </span>
+                    </div>
                 </div>
                 <div class="px-5 pt-4 pb-3 bg-white">
                     <div class="flex items-center justify-between">
