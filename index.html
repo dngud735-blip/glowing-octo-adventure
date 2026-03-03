@@ -31,7 +31,7 @@
             max-width: 380px; 
         }
 
-        /* 입력창 디자인: 하단 1px 테두리만 유지 */
+        /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
         input[type="number"], input[type="text"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db;
@@ -71,7 +71,7 @@
             outline: none;
         }
 
-        /* 라벨 디자인 */
+        /* 라벨 디자인: 하단 테두리만 유지, 상단/좌우 제거 */
         .grid-label {
             display: flex;
             align-items: center;
@@ -82,6 +82,9 @@
             font-weight: 800;
             font-size: 13px;
             border-bottom: 1px solid currentColor;
+            border-top: none;
+            border-left: none;
+            border-right: none;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
@@ -141,12 +144,13 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* 설정창 및 AI 리스트 영역 애니메이션 */
+        /* API 키 설정 창 */
         #keyConfigArea { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
         #keyConfigArea.open { max-height: 150px; padding-bottom: 1rem; }
 
+        /* AI 결과 리스트 (인라인 창) */
         #aiResultBox { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
-        #aiResultBox.open { max-height: 600px; padding-bottom: 1.5rem; }
+        #aiResultBox.open { max-height: 800px; padding-bottom: 1.5rem; }
     </style>
 </head>
 <body>
@@ -164,7 +168,7 @@
         <!-- API 키 설정 (보안용) -->
         <div id="keyConfigArea" class="bg-slate-800 px-4">
             <div class="pt-3">
-                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local)</p>
+                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local Storage)</p>
                 <div class="flex gap-2">
                     <input type="text" id="api_key_field" placeholder="AIzaSy..." class="!bg-slate-700 !text-white !h-9 !text-sm !border-none rounded-lg px-3 flex-1 text-left">
                     <button onclick="saveApiKey()" class="bg-blue-600 text-white px-3 rounded-lg font-black text-[10px] h-9">SAVE</button>
@@ -185,7 +189,7 @@
             </div>
         </div>
 
-        <!-- AI 도구함 -->
+        <!-- AI 도구함 (타이틀과 입력섹션 사이) -->
         <section id="aiToolbox" class="bg-slate-50 border-x border-slate-100 px-3 pt-4">
             <div class="flex gap-2 mb-2">
                 <button onclick="document.getElementById('aiUpload').click()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition-all shadow-sm">
@@ -197,16 +201,19 @@
             <!-- AI 분석 결과 창 (인라인) -->
             <div id="aiResultBox">
                 <div class="flex items-center justify-between px-1 mb-2">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">분석된 리스트 (터치 시 입력창으로 이동)</span>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">분석된 리스트 (터치 시 즉시 계산)</span>
                     <button onclick="closeAIResultBox()" class="text-slate-300 text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <div id="aiInlineList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
+                <div id="aiInlineList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                    <!-- AI 인식 결과가 여기에 생성됨 -->
+                </div>
             </div>
         </section>
 
         <!-- 입력 섹션 (원본 디자인 복구) -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
+                
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
                 <input type="number" id="p1_in" onkeydown="handleEnter(event)" class="border-amber-100">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p2_in'); i.value=''; i.focus(); haptic(10);">웨빙2</label>
@@ -234,9 +241,11 @@
             </div>
 
             <div class="grid grid-cols-4 gap-x-2.5">
+                <!-- RESET 버튼: 바탕 흰색, 직각 -->
                 <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 tracking-tighter font-black" style="border: 1px solid #d1d5db; border-radius: 0px;">
                     RESET
                 </button>
+                <!-- GENERATE PLAN 버튼: 바탕 검정, 90도 직각 -->
                 <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase" style="border-radius: 0px;">
                     GENERATE PLAN
                 </button>
@@ -381,6 +390,7 @@
             }
         }
 
+        // ✔️ 항목 터치 시 즉시 입력 + 계산 자동화 로직
         function renderAIInlineResults(list) {
             const container = document.getElementById('aiInlineList');
             container.innerHTML = '';
@@ -388,11 +398,27 @@
                 const div = document.createElement('div');
                 div.className = "bg-white p-3 rounded-xl border border-indigo-100 flex items-center justify-between shadow-sm animate-in active:scale-95 transition-all mb-2 cursor-pointer";
                 div.onclick = () => {
+                    // 1. 폼 데이터 입력
                     document.getElementById('w_in').value = item.w;
                     document.getElementById('h_in').value = item.h;
                     document.getElementById('q_goal').value = item.q;
+                    
+                    // 2. 완료 수량 초기화 (새 계산이므로)
+                    document.getElementById('q_done1').value = '';
+                    document.getElementById('q_done2').value = '';
+                    document.getElementById('q_done3').value = '';
+
                     haptic(30);
-                    showToast("치수 자동 입력 완료");
+                    showToast("치수 입력 및 즉시 계산 실행");
+
+                    // 3. 즉시 계산 함수 실행
+                    calculate();
+
+                    // 4. 결과 영역으로 부드럽게 스크롤 이동
+                    setTimeout(() => {
+                        const target = document.getElementById('resultArea');
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 200);
                 };
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
@@ -591,9 +617,7 @@
             
             let minCuts = 999999;
             for (let n = 2; n <= 10; n++) {
-                // ✔️ 목표가 설정된 경우, 잔여 수량보다 많은 장수씩 자르는 계획은 제외
                 if (isGoal && Q > 0 && n > Q) break;
-
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) continue; 
                 let curB = isGoal ? Math.ceil(Q / n) : 1;
                 let totalCutCount = n + curB + (finalWaste > 0 ? 1 : 0);
@@ -630,9 +654,7 @@
             
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
             for (let n = 2; n <= 10; n++) {
-                // ✔️ 카드 생성 시에도 필터 적용: 잔여 수량보다 많은 n은 패스
                 if (isGoal && Q > 0 && n > Q) break;
-
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
                 let floorB = isGoal ? Math.floor(Q / n) : 1; let remB = isGoal ? (Q % n) : 0;
                 let curB_for_cut = isGoal ? Math.ceil(Q / n) : 1; 
