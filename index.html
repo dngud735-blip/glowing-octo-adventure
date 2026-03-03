@@ -204,7 +204,7 @@
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">분석된 리스트 (터치 시 즉시 계산)</span>
                     <button onclick="closeAIResultBox()" class="text-slate-300 text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <div id="aiInlineList" class="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+                <div id="aiInlineList" class="space-y-2 max-h-[450px] overflow-y-auto pr-1 pb-2">
                     <!-- AI 인식 결과가 여기에 생성됨 -->
                 </div>
             </div>
@@ -241,11 +241,11 @@
             </div>
 
             <div class="grid grid-cols-4 gap-x-2.5">
-                <!-- RESET 버튼: 바탕 흰색, 직각 -->
+                <!-- RESET 버튼 -->
                 <button onclick="resetForm()" class="col-span-1 action-btn bg-white text-black text-[11px] active:bg-slate-50 tracking-tighter font-black" style="border: 1px solid #d1d5db; border-radius: 0px;">
                     RESET
                 </button>
-                <!-- GENERATE PLAN 버튼: 바탕 검정, 90도 직각 -->
+                <!-- GENERATE PLAN 버튼 -->
                 <button onclick="calculate()" class="col-span-3 action-btn bg-slate-900 text-white shadow-lg text-lg active:scale-95 font-black uppercase" style="border-radius: 0px;">
                     GENERATE PLAN
                 </button>
@@ -390,42 +390,40 @@
             }
         }
 
-        // ✔️ 항목 터치 시 즉시 입력 + 계산 자동화 로직
+        // ✔️ 항목 터치 시 즉시 입력 + 계산 자동화 (글자 크기 키움)
         function renderAIInlineResults(list) {
             const container = document.getElementById('aiInlineList');
             container.innerHTML = '';
             list.forEach((item, i) => {
                 const div = document.createElement('div');
-                div.className = "bg-white p-3 rounded-xl border border-indigo-100 flex items-center justify-between shadow-sm animate-in active:scale-95 transition-all mb-2 cursor-pointer";
+                div.className = "bg-white p-4 rounded-2xl border border-indigo-100 flex items-center justify-between shadow-sm animate-in active:scale-95 transition-all mb-2 cursor-pointer";
                 div.onclick = () => {
-                    // 1. 폼 데이터 입력
                     document.getElementById('w_in').value = item.w;
                     document.getElementById('h_in').value = item.h;
                     document.getElementById('q_goal').value = item.q;
-                    
-                    // 2. 완료 수량 초기화 (새 계산이므로)
                     document.getElementById('q_done1').value = '';
                     document.getElementById('q_done2').value = '';
                     document.getElementById('q_done3').value = '';
 
                     haptic(30);
-                    showToast("치수 입력 및 즉시 계산 실행");
-
-                    // 3. 즉시 계산 함수 실행
+                    showToast("계산 실행 중...");
                     calculate();
 
-                    // 4. 결과 영역으로 부드럽게 스크롤 이동
                     setTimeout(() => {
                         const target = document.getElementById('resultArea');
                         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }, 200);
                 };
+                
+                // 💡 치수(3xl), 수량(2xl) 글자 크기 조정됨
                 div.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <span class="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">${i+1}</span>
-                        <p class="text-xl font-black text-slate-800 tabular-nums">${item.w} <small class="text-slate-300 mx-0.5">x</small> ${item.h}</p>
+                        <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-black shrink-0">${i+1}</span>
+                        <p class="text-3xl font-black text-slate-800 tabular-nums leading-none tracking-tight">${item.w} <small class="text-slate-300 font-light text-xl mx-0.5">x</small> ${item.h}</p>
                     </div>
-                    <span class="bg-rose-50 text-rose-600 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight">목표 ${item.q}개</span>
+                    <div class="flex flex-col items-center">
+                        <span class="text-2xl font-black text-rose-600 leading-none">${item.q}<small class="text-xs font-bold text-rose-400 ml-0.5">장</small></span>
+                    </div>
                 `;
                 container.appendChild(div);
             });
@@ -436,7 +434,7 @@
         function closeAIResultBox() { document.getElementById('aiResultBox').classList.remove('open'); }
 
         /* -----------------------------------------------------------
-           원본 마스터 계산 로직 (센터, 분할, 웨빙 등 100% 보존)
+           원본 마스터 계산 로직 (100% 보존)
         ----------------------------------------------------------- */
         function toggleHistory() {
             const list = document.getElementById('historyList');
