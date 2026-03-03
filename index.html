@@ -32,7 +32,8 @@
             position: relative;
         }
 
-        input[type="number"] {
+        /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
+        input[type="number"], input[type="text"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db;
             border-top: none;
@@ -52,7 +53,7 @@
             outline: none;
         }
 
-        input[type="number"]:focus {
+        input:focus {
             border-bottom-color: #9ca3af;
             background-color: #fff;
         }
@@ -71,6 +72,7 @@
             outline: none;
         }
 
+        /* 라벨 디자인: 하단 테두리만 유지, 상단/좌우 제거 */
         .grid-label {
             display: flex;
             align-items: center;
@@ -92,7 +94,10 @@
             opacity: 0.85; 
         }
 
-        .grid-label:active { opacity: 1; background-color: rgba(0,0,0,0.05); }
+        .grid-label:active {
+            opacity: 1;
+            background-color: rgba(0,0,0,0.05);
+        }
 
         .data-chip {
             display: inline-flex;
@@ -115,7 +120,10 @@
         }
         .animate-in { animation: slideUp 0.3s ease-out forwards; }
 
-        .history-card { transition: all 0.2s ease; border-left: 10px solid #cbd5e1; }
+        .history-card {
+            transition: all 0.2s ease;
+            border-left: 10px solid #cbd5e1;
+        }
         
         #toast {
             position: fixed;
@@ -137,8 +145,12 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* AI 서랍 애니메이션 */
-        #aiResultsModal { transition: opacity 0.3s ease; }
+        /* 설정창 애니메이션 */
+        #keyConfigSection { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
+        #keyConfigSection.open { max-height: 200px; padding-bottom: 1rem; }
+
+        /* AI 결과 서랍 */
+        #aiResultsModal { transition: opacity 0.3s ease; display: none; }
         #aiResultsModal > div { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); transform: translateY(100%); }
         #aiResultsModal.show { display: flex !important; opacity: 1; }
         #aiResultsModal.show > div { transform: translateY(0); }
@@ -150,8 +162,21 @@
 
     <div class="app-container">
         <!-- 타이틀 바 -->
-        <div class="bg-slate-900 text-white flex items-center justify-center font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700 relative">
+        <div class="bg-slate-900 text-white flex items-center justify-between px-4 font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700 relative">
+            <div class="w-8"></div>
             <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
+            <button onclick="toggleKeyConfig()" class="w-8 text-slate-400 text-sm active:scale-90"><i class="fa-solid fa-gear"></i></button>
+        </div>
+
+        <!-- API 키 설정 (보안용) -->
+        <div id="keyConfigSection" class="bg-slate-800 px-4">
+            <div class="pt-2">
+                <p class="text-[10px] text-slate-400 font-bold mb-2 uppercase tracking-widest text-center">Gemini API Key (Local Storage)</p>
+                <div class="flex gap-2">
+                    <input type="text" id="api_key_field" placeholder="AIzaSy..." class="!bg-slate-700 !text-white !h-10 !text-sm !border-none rounded-lg px-3 flex-1">
+                    <button onclick="saveApiKey()" class="bg-blue-600 text-white px-4 rounded-lg font-black text-xs h-10">SAVE</button>
+                </div>
+            </div>
         </div>
 
         <!-- 삭제 모달 -->
@@ -167,14 +192,32 @@
             </div>
         </div>
 
+        <!-- AI 로딩/결과 -->
+        <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm">
+            <div class="flex flex-col items-center">
+                <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
+                <p class="text-white font-bold tracking-widest animate-pulse text-sm">이미지 치수 분석 중...</p>
+            </div>
+        </div>
+
+        <div id="aiResultsModal" class="fixed inset-0 bg-slate-900/60 z-[150] items-end justify-center backdrop-blur-sm pb-0" onclick="if(event.target===this) closeAIModal()">
+            <div class="bg-white w-full max-w-md rounded-t-[32px] pt-6 pb-10 px-5 shadow-2xl flex flex-col max-h-[85vh]">
+                <div class="flex justify-between items-center mb-6 px-1">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">분석된 치수 목록</h3>
+                    <button onclick="closeAIModal()" class="text-slate-400 text-2xl p-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="aiResultsList" class="overflow-y-auto space-y-3 pb-6 flex-1 px-1"></div>
+            </div>
+        </div>
+
         <!-- 입력 섹션 -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5 relative">
             
-            <!-- AI 카메라 버튼 (우측 상단 플로팅) -->
-            <button onclick="document.getElementById('aiUpload').click()" class="absolute -top-3 -right-2 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl active:scale-90 transition-transform z-10 border-[3px] border-white">
+            <!-- AI 버튼 -->
+            <button onclick="document.getElementById('aiUpload').click()" class="absolute -top-4 -right-2 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl active:scale-90 transition-transform z-10 border-[3px] border-white">
                 <i class="fa-solid fa-camera"></i>
             </button>
-            <!-- 숨겨진 파일 인풋 -->
+            <!-- capture 속성을 제거하여 촬영/갤러리 선택 가능하게 함 -->
             <input type="file" id="aiUpload" accept="image/*" class="hidden" onchange="processAIImage(event)">
 
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center mt-2">
@@ -245,45 +288,25 @@
         </div>
     </div>
 
-    <!-- AI 로딩 오버레이 -->
-    <div id="aiLoadingModal" class="fixed inset-0 bg-slate-900/80 z-[200] hidden items-center justify-center backdrop-blur-sm">
-        <div class="flex flex-col items-center">
-            <i class="fa-solid fa-wand-magic-sparkles fa-bounce text-purple-400 text-5xl mb-4"></i>
-            <p class="text-white font-bold tracking-widest animate-pulse text-sm">이미지 치수 분석 중...</p>
-            <p class="text-slate-400 text-[11px] mt-2">약 3~5초 정도 소요됩니다.</p>
-        </div>
-    </div>
-
-    <!-- AI 결과 선택 서랍(Drawer) -->
-    <div id="aiResultsModal" class="fixed inset-0 bg-slate-900/60 z-[150] hidden items-end justify-center backdrop-blur-sm pb-0" onclick="if(event.target===this) closeAIModal()">
-        <div class="bg-slate-50 w-full max-w-md rounded-t-[32px] pt-6 pb-10 px-5 shadow-2xl flex flex-col max-h-[85vh]">
-            <div class="flex justify-between items-center mb-6 px-1">
-                <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
-                    <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center text-sm"><i class="fa-solid fa-robot"></i></span> 
-                    분석된 치수 목록
-                </h3>
-                <button onclick="closeAIModal()" class="text-slate-400 hover:text-slate-600 text-2xl active:scale-90 p-2"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div id="aiResultsList" class="overflow-y-auto space-y-3 pb-6 flex-1 px-1">
-                <!-- 결과가 여기에 삽입됨 -->
-            </div>
-        </div>
-    </div>
-
     <script>
-        // ==========================================
-        // API KEY 설정 구역 
-        // ==========================================
-        const apiKey = ""; 
-        const USER_PROVIDED_KEY = "AIzaSyDlcFvLvRMmzIBhq6Jw-3uVO5GFF66EIkU";
-        const FINAL_API_KEY = apiKey || USER_PROVIDED_KEY;
-
         let historyData = [];
+        let storedKey = localStorage.getItem('gemini_api_key_pvc') || "";
 
         window.onload = function() {
+            if (storedKey) document.getElementById('api_key_field').value = storedKey;
             const saved = localStorage.getItem('pvc_mesh_calculator_history');
             if (saved) { try { historyData = JSON.parse(saved); renderHistory(); } catch(e) { historyData = []; } }
         };
+
+        function toggleKeyConfig() { document.getElementById('keyConfigSection').classList.toggle('open'); }
+        function saveApiKey() {
+            const val = document.getElementById('api_key_field').value.trim();
+            if (!val) return;
+            localStorage.setItem('gemini_api_key_pvc', val);
+            storedKey = val;
+            showToast("API 키가 저장되었습니다.");
+            toggleKeyConfig();
+        }
 
         function haptic(ms = 20) { if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(ms); }
         function showToast(msg) {
@@ -292,11 +315,7 @@
             setTimeout(() => { toast.classList.remove('show'); }, 1500);
         }
 
-        /* -----------------------------------------------------------
-           AI 이미지 분석 로직 추가
-        ----------------------------------------------------------- */
-        
-        // 1. 휴대폰 원본 이미지는 10MB가 넘으므로 압축(리사이즈) 후 전송해야 안 뻗습니다.
+        // --- AI 이미지 인식 로직 ---
         function compressImage(file, maxSize = 1024) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -304,28 +323,14 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        if (width > height) {
-                            if (width > maxSize) {
-                                height = Math.round((height * maxSize) / width);
-                                width = maxSize;
-                            }
-                        } else {
-                            if (height > maxSize) {
-                                width = Math.round((width * maxSize) / height);
-                                height = maxSize;
-                            }
+                        let w = img.width, h = img.height;
+                        if (w > h ? w > maxSize : h > maxSize) {
+                            if (w > h) { h = Math.round((h * maxSize) / w); w = maxSize; }
+                            else { w = Math.round((w * maxSize) / h); h = maxSize; }
                         }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // JPEG 포맷, 품질 80%로 압축하여 반환
-                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
                     };
                     img.src = e.target.result;
                 };
@@ -333,167 +338,68 @@
             });
         }
 
-        // 지수 백오프 기반 Fetch (네트워크 불안정 대비)
-        async function fetchWithRetry(url, options) {
-            const delays = [1000, 2000, 4000, 8000, 16000];
-            for (let i = 0; i < 5; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(`API Error: ${response.status} - ${errData.error?.message || 'Unknown'}`);
-                    }
-                    return await response.json();
-                } catch (e) {
-                    if (i === 4) throw e;
-                    console.log(`Retry ${i+1} failed, retrying in ${delays[i]}ms...`);
-                    await new Promise(r => setTimeout(r, delays[i]));
-                }
-            }
-        }
-
         async function processAIImage(event) {
+            if (!storedKey) { alert("먼저 우측 상단 톱니바퀴 버튼을 눌러 API 키를 저장해주세요!"); toggleKeyConfig(); return; }
             const file = event.target.files[0];
             if (!file) return;
-            event.target.value = ''; // 동일 파일 재선택 가능하게 초기화
-
-            haptic(20);
+            event.target.value = '';
             document.getElementById('aiLoadingModal').style.display = 'flex';
 
             try {
-                // 이미지 리사이즈 (핵심 최적화 부분)
-                const base64Url = await compressImage(file, 1024);
-                // "data:image/jpeg;base64," 앞부분 제거
-                const base64Data = base64Url.split(',')[1];
-
-                // ✔️ 프리뷰 모델 대신 가장 안정적인 정식 gemini-2.5-flash 모델로 변경했습니다.
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${FINAL_API_KEY}`;
-                
-                // 프롬프트 및 **강제 JSON 스키마 적용** (마크다운 에러 방지)
-                const payload = {
-                    contents: [{
-                        role: "user",
-                        parts: [
-                            { text: "이 이미지(작업 지시서 또는 메모)에서 재단해야 할 '가로(Width)', '세로(Height)', '목표수량(Quantity)' 정보 세트들을 모두 찾아줘. 폭(원단폭)이나 웨빙 수치는 제외해. 가로/세로/수량에 해당하는 숫자만 추출하고, 수량이 적혀있지 않으면 무조건 1로 설정해." },
-                            { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-                        ]
-                    }],
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "ARRAY",
-                            items: {
-                                type: "OBJECT",
-                                properties: {
-                                    w: { type: "NUMBER", description: "가로 길이" },
-                                    h: { type: "NUMBER", description: "세로 길이" },
-                                    q: { type: "NUMBER", description: "목표 수량 (기본값 1)" }
-                                },
-                                required: ["w", "h", "q"]
-                            }
-                        }
-                    }
-                };
-
-                const result = await fetchWithRetry(url, {
+                const b64 = await compressImage(file);
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${storedKey}`;
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        contents: [{ parts: [
+                            { text: "작업 지시서에서 가로(w), 세로(h), 수량(q) 정보 세트를 모두 추출해. 수량이 없으면 1. 원단폭이나 웨빙 정보는 제외해. 숫자만 JSON 배열로 응답해." },
+                            { inlineData: { mimeType: "image/jpeg", data: b64 } }
+                        ] }],
+                        generationConfig: { 
+                            responseMimeType: "application/json", 
+                            responseSchema: { type: "ARRAY", items: { type: "OBJECT", properties: { w: {type: "NUMBER"}, h: {type: "NUMBER"}, q: {type: "NUMBER"} }, required: ["w", "h", "q"] } } 
+                        }
+                    })
                 });
-
-                // JSON 파싱 (구글 서버가 완벽한 JSON 배열 텍스트를 반환함)
-                const textResponse = result.candidates[0].content.parts[0].text;
-                const dataList = JSON.parse(textResponse);
-
-                if (!Array.isArray(dataList) || dataList.length === 0) {
-                    throw new Error("치수 정보를 찾지 못했습니다.");
+                
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || "분석 실패");
                 }
-
-                renderAIResults(dataList);
-
-            } catch (error) {
-                console.error(error);
-                alert("분석 실패\n이유: " + error.message + "\n(403에러면 깃허브 주소 차단 문제, 400에러면 API 키가 잘못된 것입니다.)");
-            } finally {
-                document.getElementById('aiLoadingModal').style.display = 'none';
+                const resJson = await response.json();
+                const list = JSON.parse(resJson.candidates[0].content.parts[0].text);
+                renderAIResults(list);
+            } catch (err) { 
+                alert("분석 실패\n이유: " + err.message + "\n(403에러 시 깃허브 주소 리퍼러 제한 설정 확인)");
+            } finally { 
+                document.getElementById('aiLoadingModal').style.display = 'none'; 
             }
         }
 
         function renderAIResults(list) {
             const container = document.getElementById('aiResultsList');
             container.innerHTML = '';
-
-            list.forEach((item, index) => {
-                const w = item.w || 0;
-                const h = item.h || 0;
-                const q = item.q || 1;
-
+            list.forEach((item, i) => {
                 const card = document.createElement('div');
-                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between cursor-pointer hover:border-indigo-400 hover:ring-2 hover:ring-indigo-100 transition-all active:scale-[0.98]";
-                card.onclick = () => selectAIResult(w, h, q);
-
-                card.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm border border-indigo-100">
-                            #${index + 1}
-                        </div>
-                        <div>
-                            <div class="text-2xl font-black text-slate-800 tabular-nums leading-none mb-1.5">
-                                ${w} <small class="text-slate-400 font-light mx-0.5 text-base">X</small> ${h}
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded text-[11px] font-black uppercase tracking-tight border border-rose-100">
-                                    목표 ${q}장
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-slate-300">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </div>
-                `;
+                card.className = "bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between active:scale-95 transition-all";
+                card.onclick = () => { 
+                    document.getElementById('w_in').value = item.w;
+                    document.getElementById('h_in').value = item.h;
+                    document.getElementById('q_goal').value = item.q;
+                    closeAIModal();
+                    showToast("치수가 자동 입력되었습니다.");
+                    if (document.getElementById('r_in').value) setTimeout(calculate, 300);
+                };
+                card.innerHTML = `<div><p class="text-2xl font-black">${item.w} x ${item.h}</p><p class="text-rose-500 font-bold text-xs uppercase">목표 ${item.q}장</p></div><i class="fa-solid fa-chevron-right text-slate-300"></i>`;
                 container.appendChild(card);
             });
-
-            // 서랍 열기
-            const modal = document.getElementById('aiResultsModal');
-            modal.style.display = 'flex';
-            // 약간의 딜레이를 주어 CSS 트랜지션 애니메이션 적용
-            setTimeout(() => { modal.classList.add('show'); }, 10);
+            const m = document.getElementById('aiResultsModal'); m.style.display = 'flex'; setTimeout(() => m.classList.add('show'), 10);
             haptic(30);
         }
+        function closeAIModal() { const m = document.getElementById('aiResultsModal'); m.classList.remove('show'); setTimeout(() => m.style.display = 'none', 300); }
 
-        function selectAIResult(w, h, q) {
-            haptic(15);
-            // 폼에 자동 입력
-            document.getElementById('w_in').value = w;
-            document.getElementById('h_in').value = h;
-            document.getElementById('q_goal').value = q;
-            
-            // 완료수량 초기화
-            document.getElementById('q_done1').value = '';
-            document.getElementById('q_done2').value = '';
-            document.getElementById('q_done3').value = '';
-
-            closeAIModal();
-            showToast("치수가 자동 입력되었습니다!");
-            
-            // 원단 폭(R)이 비어있지 않다면 바로 계산 실행
-            if (document.getElementById('r_in').value) {
-                setTimeout(calculate, 300);
-            }
-        }
-
-        function closeAIModal() {
-            const modal = document.getElementById('aiResultsModal');
-            modal.classList.remove('show');
-            setTimeout(() => { modal.style.display = 'none'; }, 300); // 트랜지션 시간 후 숨김
-        }
-
-        /* -----------------------------------------------------------
-           기존 계산기 로직
-        ----------------------------------------------------------- */
-        
+        // --- 기존 계산 로직 ---
         function toggleHistory() {
             const list = document.getElementById('historyList');
             const icon = document.getElementById('historyIcon');
@@ -719,10 +625,8 @@
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
             for (let n = 2; n <= 10; n++) {
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
-                
                 let floorB = isGoal ? Math.floor(Q / n) : 1; 
                 let remB = isGoal ? (Q % n) : 0;
-                
                 let curB_for_cut = isGoal ? Math.ceil(Q / n) : 1; 
                 let totalCutCount = n + curB_for_cut + (finalWaste > 0 ? 1 : 0);
                 const isRec = isGoal && (totalCutCount === minCuts);
@@ -821,9 +725,9 @@
                 card.innerHTML = htmlContent; container.appendChild(card);
             }
             if (!isFromHistory) saveToHistory(W, H, rIn ? R : '', p1Raw, p2Raw, (isGoal ? goalN : 0), doneTotal, Q, pullLabel);
-            
             document.body.appendChild(document.getElementById('historySection'));
         }
     </script>
 </body>
 </html>
+
