@@ -174,7 +174,7 @@
             <button onclick="document.getElementById('aiUpload').click()" class="absolute -top-3 -right-2 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-full shadow-lg flex items-center justify-center text-xl active:scale-90 transition-transform z-10 border-[3px] border-white">
                 <i class="fa-solid fa-camera"></i>
             </button>
-            <!-- 숨겨진 파일 인풋 (capture="environment"를 제거하여 사진촬영 or 갤러리 업로드 모두 가능하게 함) -->
+            <!-- 숨겨진 파일 인풋 -->
             <input type="file" id="aiUpload" accept="image/*" class="hidden" onchange="processAIImage(event)">
 
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center mt-2">
@@ -366,8 +366,8 @@
                 // "data:image/jpeg;base64," 앞부분 제거
                 const base64Data = base64Url.split(',')[1];
 
-                // 제미나이 2.5 Flash Preview 모델 사용
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${FINAL_API_KEY}`;
+                // ✔️ 프리뷰 모델 대신 가장 안정적인 정식 gemini-2.5-flash 모델로 변경했습니다.
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${FINAL_API_KEY}`;
                 
                 // 프롬프트 및 **강제 JSON 스키마 적용** (마크다운 에러 방지)
                 const payload = {
@@ -413,7 +413,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert("분석 실패: " + error.message + "\n(API 키가 유효한지 또는 이미지가 너무 흐린지 확인하세요.)");
+                alert("분석 실패\n이유: " + error.message + "\n(403에러면 깃허브 주소 차단 문제, 400에러면 API 키가 잘못된 것입니다.)");
             } finally {
                 document.getElementById('aiLoadingModal').style.display = 'none';
             }
@@ -827,3 +827,5 @@
     </script>
 </body>
 </html>
+
+
