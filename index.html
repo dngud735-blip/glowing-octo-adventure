@@ -33,7 +33,7 @@
             max-width: 380px; 
         }
 
-        /* 1. 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거, 90도 직각 */
+        /* 1. 입력창 디자인: 하단 1px 테두리만 유지, 90도 직각 */
         input[type="number"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db !important;
@@ -171,7 +171,7 @@
             <!-- 분석 로딩 -->
             <div id="aiLoading" class="hidden flex items-center justify-center p-4 bg-slate-50 rounded-none border border-dashed border-blue-200">
                 <span class="loader mr-3"></span>
-                <span class="text-sm font-bold text-slate-600">데이터를 분석 중입니다...</span>
+                <span id="loadingText" class="text-sm font-bold text-slate-600">데이터를 분석 중입니다...</span>
             </div>
 
             <!-- 추출 리스트 -->
@@ -255,7 +255,7 @@
     </div>
 
     <script>
-        // 사용자님의 API 키가 적용되었습니다.
+        // 1. 여기에 발급받으신 API 키를 넣으세요
         const apiKey = "AIzaSyAr7wmH50WZb9aHTDWbBiaArBsSTDbQ6xs"; 
         let historyData = [];
 
@@ -271,27 +271,32 @@
             setTimeout(() => { toast.classList.remove('show'); }, 2000);
         }
 
-        // --- 분석 엔진 로직 (지수 백오프 및 헤더 인증 방식 적용) ---
+        // --- 분석 엔진 로직 (공식 문서 방식 반영 및 모델명 최적화) ---
         async function handlePhotoUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
             
-            document.getElementById('aiLoading').classList.remove('hidden');
+            const loadingArea = document.getElementById('aiLoading');
+            const loadingText = document.getElementById('loadingText');
+            loadingArea.classList.remove('hidden');
+            loadingText.innerText = "이미지를 준비 중입니다...";
             document.getElementById('aiResultArea').classList.add('hidden');
             document.getElementById('photoBtn').disabled = true;
 
             try {
                 const base64Image = await optimizeImage(file);
+                loadingText.innerText = "AI 분석 요청 중...";
                 const response = await callGeminiWithRetries(base64Image);
+                
                 if (response && response.rows) {
                     renderAiList(response.rows);
                 } else {
-                    throw new Error("Invalid Response Schema");
+                    throw new Error("데이터 구조 인식 오류");
                 }
             } catch (err) {
-                console.error(err);
-                showToast("데이터 추출 실패. 선명하게 다시 찍어주세요.");
-                document.getElementById('aiLoading').classList.add('hidden');
+                console.error("Analysis Error:", err);
+                showToast("실패: " + (err.message || "다시 시도해 주세요."));
+                loadingArea.classList.add('hidden');
             } finally {
                 document.getElementById('photoBtn').disabled = false;
                 input.value = ''; 
@@ -299,8 +304,11 @@
         }
 
         async function callGeminiWithRetries(base64Data) {
-            const systemPrompt = "Extract cutting dimensions from the table in the image. Search for Width(옆), Height(높이), and Quantity(발주수량). Convert meter decimals (e.g. 1.22) to cm (122). Respond in JSON schema: {rows: [{w: number, h: number, q: number}]}";
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`;
+            const systemPrompt = "Extract rows from the table in the image. Search for columns: '가로(옆)', '세로(높이)', '발주수량'. Convert meters to cm (e.g. 1.22m -> 122). Respond ONLY in JSON: {rows: [{w: number, h: number, q: number}]}";
+            
+            // 모델명을 gemini-1.5-flash로 변경 (가장 안정적인 모델)
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`;
+            
             const delays = [1000, 2000, 4000];
 
             for (let i = 0; i < delays.length; i++) {
@@ -309,35 +317,27 @@
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/json',
-                            'X-goog-api-key': apiKey // curl 방식과 동일하게 헤더에 키를 넣음
+                            'X-goog-api-key': apiKey 
                         },
                         body: JSON.stringify({
-                            contents: [{ parts: [{ text: "Analyze table data." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
+                            contents: [{ parts: [{ text: "Extract data from image table." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
                             systemInstruction: { parts: [{ text: systemPrompt }] },
                             generationConfig: { 
-                                responseMimeType: "application/json",
-                                responseSchema: {
-                                    type: "OBJECT",
-                                    properties: {
-                                        rows: {
-                                            type: "ARRAY",
-                                            items: {
-                                                type: "OBJECT",
-                                                properties: {
-                                                    w: { type: "NUMBER" },
-                                                    h: { type: "NUMBER" },
-                                                    q: { type: "NUMBER" }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                responseMimeType: "application/json"
                             }
                         })
                     });
-                    if (!resp.ok) throw new Error('API Error');
+                    
+                    if (!resp.ok) {
+                        const errBody = await resp.json();
+                        throw new Error(errBody.error?.message || `서버 응답 오류 (${resp.status})`);
+                    }
+
                     const result = await resp.json();
-                    return JSON.parse(result.candidates?.[0]?.content?.parts?.[0]?.text);
+                    const textContent = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!textContent) throw new Error("분석 결과가 비어있습니다.");
+                    
+                    return JSON.parse(textContent);
                 } catch (e) {
                     if (i === delays.length - 1) throw e;
                     await new Promise(r => setTimeout(r, delays[i]));
@@ -352,6 +352,7 @@
                     const img = new Image();
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
+                        // 1.5-flash 분석에 최적화된 크기 (긴 쪽 기준 1024px)
                         const maxSide = 1024;
                         let w = img.width, h = img.height;
                         if (w > h) { if (w > maxSide) { h *= maxSide / w; w = maxSide; } }
@@ -359,6 +360,7 @@
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
+                        // base64에서 헤더(data:image/jpeg;base64,)를 제외한 순수 데이터만 추출
                         resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
                     };
                     img.src = e.target.result;
@@ -370,6 +372,10 @@
         function renderAiList(rows) {
             document.getElementById('aiLoading').classList.add('hidden');
             const list = document.getElementById('photoResultList');
+            if (rows.length === 0) {
+                showToast("데이터가 없습니다.");
+                return;
+            }
             list.innerHTML = rows.map((r, i) => `
                 <div class="photo-row-item p-4 flex items-center justify-between border-b border-slate-100 last:border-0" onclick="applyAiRow(${r.w}, ${r.h}, ${r.q})">
                     <div class="flex items-center gap-3">
