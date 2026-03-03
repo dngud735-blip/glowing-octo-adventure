@@ -95,6 +95,7 @@
     </div>
 
     <script>
+        // 발급받으신 정식 API 키를 삽입했습니다.
         const apiKey = "AIzaSyAr7wmH50WZb9aHTDWbBiaArBsSTDbQ6xs";
         let history = JSON.parse(localStorage.getItem('pvc_history') || '[]');
 
@@ -103,7 +104,9 @@
         async function handlePhoto(input) {
             if (!input.files[0]) return;
             const loader = document.getElementById('aiLoading');
+            const resultArea = document.getElementById('aiResultArea');
             loader.classList.remove('hidden');
+            resultArea.classList.add('hidden');
             
             try {
                 const base64 = await new Promise(r => {
@@ -112,8 +115,9 @@
                     reader.readAsDataURL(input.files[0]);
                 });
 
-                const prompt = "Extract cutting dimensions from the table in the image. Columns: 가로(Width), 세로(Height), 수량(Qty). Meter values (e.g. 1.22) to cm (122). Respond in JSON only: {'rows':[{'w':122,'h':102,'q':50}]}";
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                // 외부 호출 시 가장 안정적인 gemini-1.5-flash 모델로 변경했습니다.
+                const prompt = "Extract rows from the table in this image. Columns: 가로(Width), 세로(Height), 발주수량(Quantity). If dimensions are in meters (e.g., 0.92), multiply by 100 to convert to cm (e.g., 92). Respond ONLY in this JSON format: {\"rows\":[{\"w\":92,\"h\":53,\"q\":3}]}";
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
                 const resp = await fetch(url, {
                     method: 'POST',
@@ -121,13 +125,24 @@
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: base64 } }] }] })
                 });
 
+                if (!resp.ok) throw new Error("API 호출 실패");
+
                 const data = await resp.json();
                 const text = data.candidates[0].content.parts[0].text;
-                const json = JSON.parse(text.match(/\{[\s\S]*\}/)[0]);
                 
-                renderAiList(json.rows);
+                // AI 답변에서 불필요한 텍스트를 제거하고 JSON만 쏙 뽑아내는 로직 보강
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) throw new Error("JSON 형식을 찾을 수 없음");
+                const json = JSON.parse(jsonMatch[0]);
+                
+                if (json.rows && json.rows.length > 0) {
+                    renderAiList(json.rows);
+                } else {
+                    alert("추출된 데이터가 없습니다. 선명하게 다시 찍어주세요.");
+                }
             } catch (e) {
-                alert("분석 실패. 다시 찍어보세요.");
+                console.error(e);
+                alert("분석 중 오류가 발생했습니다. 선명한 사진과 인터넷 연결을 확인해주세요.");
             } finally {
                 loader.classList.add('hidden'); input.value = '';
             }
@@ -138,9 +153,9 @@
             const list = document.getElementById('aiList');
             area.classList.remove('hidden');
             list.innerHTML = rows.map(r => `
-                <div class="p-4 flex justify-between items-center active:bg-blue-50" onclick="applyAiData(${r.w},${r.h},${r.q})">
+                <div class="p-4 flex justify-between items-center active:bg-blue-50 transition-colors" onclick="applyAiData(${r.w},${r.h},${r.q})">
                     <span class="font-black text-slate-800 text-lg tabular-nums">${r.w} × ${r.h}</span>
-                    <span class="bg-blue-600 text-white px-3 py-1 text-xs font-black rounded-lg">${r.q}장</span>
+                    <span class="bg-blue-600 text-white px-3 py-1 text-xs font-black rounded-lg shadow-sm">${r.q}장</span>
                 </div>
             `).join('');
         }
@@ -163,12 +178,14 @@
             const done = parseFloat(document.getElementById('done').value) || 0;
             const Q = goal - done;
 
-            // 방향 자동 설정 (낭비 적은 쪽)
-            let PULL, pullLabel;
-            if (roll >= hVal && (roll - hVal <= roll - wVal || roll < wVal)) {
-                PULL = wVal; pullLabel = "가로";
+            let FIX, PULL, pullLabel;
+            const wasteW = roll >= wVal ? roll - wVal : 9999;
+            const wasteH = roll >= hVal ? roll - hVal : 9999;
+
+            if (wasteH <= wasteW) {
+                FIX = hVal; PULL = wVal; pullLabel = "가로";
             } else {
-                PULL = hVal; pullLabel = "세로";
+                FIX = wVal; PULL = hVal; pullLabel = "세로";
             }
 
             const results = document.getElementById('results');
@@ -182,7 +199,7 @@
                 const cuts = []; for(let i=1; i<=n; i++) cuts.push(Math.round(PULL * i * 10)/10);
 
                 results.innerHTML += `
-                    <div class="bg-white border-2 rounded-[28px] overflow-hidden shadow-lg ${isFinal ? 'border-yellow-400 ring-4 ring-yellow-400/10' : 'border-slate-100'}">
+                    <div class="bg-white border-2 rounded-[28px] overflow-hidden shadow-lg animate-in ${isFinal ? 'border-yellow-400 ring-4 ring-yellow-400/10' : 'border-slate-100'}">
                         <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
                             <span class="text-2xl font-black tabular-nums">${wVal} × ${hVal}</span>
                             ${isFinal ? '<i class="fa-solid fa-crown text-yellow-400"></i>' : '<i class="fa-solid fa-cut text-blue-500 opacity-40"></i>'}
@@ -190,9 +207,9 @@
                         <div class="p-5 space-y-5">
                             <div class="flex justify-between items-center">
                                 <span class="text-3xl font-black text-slate-800">1회 ${n}장 재단</span>
-                                <span class="text-[10px] font-black text-slate-400 border px-2 py-1 uppercase rounded">${pullLabel} 당김</span>
+                                <span class="text-[10px] font-black text-slate-400 border px-2 py-1 uppercase rounded tracking-tighter">${pullLabel} 당김</span>
                             </div>
-                            <div class="bg-blue-50 p-6 text-center rounded-2xl border border-blue-100">
+                            <div class="bg-blue-600/5 p-6 text-center rounded-2xl border border-blue-100">
                                 <span class="text-5xl font-black text-blue-600 tabular-nums">${totalLen}</span><span class="text-2xl font-black text-slate-900 ml-1">cm</span>
                             </div>
                             <div class="space-y-2">
@@ -220,10 +237,10 @@
 
         function renderHistory() {
             const list = document.getElementById('historyList');
-            if (history.length === 0) { list.innerHTML = '<p class="text-center p-6 text-slate-300 font-bold">No History</p>'; return; }
+            if (history.length === 0) { list.innerHTML = '<p class="text-center p-6 text-slate-300 font-bold uppercase tracking-widest text-sm">Empty History</p>'; return; }
             list.innerHTML = history.map(h => `
                 <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 history-item" onclick="applyHistory(${h.id})">
-                    <div class="text-2xl font-black text-slate-900 tabular-nums">${h.w} × ${h.h} <span class="text-blue-600 text-lg ml-2">잔여 ${h.ql}</span></div>
+                    <div class="text-2xl font-black text-slate-900 tabular-nums">${h.w} × ${h.h} <span class="text-blue-600 text-lg ml-2 font-black">잔여 ${h.ql}</span></div>
                 </div>
             `).join('');
         }
@@ -238,7 +255,6 @@
 
         function clearHistory() { if(confirm("기록을 삭제할까요?")) { history=[]; localStorage.removeItem('pvc_history'); renderHistory(); } }
         function resetAll() { location.reload(); }
-        function handleEnter(e) { if(e.key === 'Enter') calculate(); }
     </script>
 </body>
 </html>
