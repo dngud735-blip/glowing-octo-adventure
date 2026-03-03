@@ -59,7 +59,7 @@
             background-color: #fff;
         }
 
-        /* 2. 버튼 디자인: 90도 직각 (Action Button) */
+        /* 2. 버튼 디자인: 90도 직각 */
         .action-btn {
             height: 44px;
             width: 100%;
@@ -136,7 +136,7 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        .photo-row-item { transition: background 0.2s; cursor: pointer; }
+        .photo-row-item { transition: background 0.2s; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
         .photo-row-item:active { background-color: #f1f5f9; }
 
         .loader {
@@ -171,7 +171,7 @@
             <!-- 분석 로딩 -->
             <div id="aiLoading" class="hidden flex items-center justify-center p-4 bg-slate-50 rounded-none border border-dashed border-blue-200">
                 <span class="loader mr-3"></span>
-                <span class="text-sm font-bold text-slate-600">데이터를 추출 중입니다...</span>
+                <span class="text-sm font-bold text-slate-600">데이터를 분석 중입니다...</span>
             </div>
 
             <!-- 추출 리스트 -->
@@ -245,18 +245,19 @@
     <!-- 삭제 모달 -->
     <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
-            <div id="modalIcon" class="mb-4 text-4xl"></div>
-            <h3 id="modalTitle" class="text-xl font-black mb-2 text-slate-800"></h3>
-            <p id="modalDesc" class="text-slate-500 text-sm mb-6 font-medium leading-relaxed"></p>
+            <div id="modalIcon" class="mb-4 text-4xl text-red-500"><i class="fa-solid fa-trash-can"></i></div>
+            <h3 id="modalTitle" class="text-xl font-black mb-2 text-slate-800">기록 삭제</h3>
+            <p id="modalDesc" class="text-slate-500 text-sm mb-6 font-medium leading-relaxed">히스토리를 지우시겠습니까?</p>
             <div class="flex gap-3">
                 <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm active:bg-slate-200">취소</button>
-                <button id="confirmDeleteBtn" class="flex-1 py-3 text-white font-bold rounded-xl text-sm active:scale-95"></button>
+                <button id="confirmDeleteBtn" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl text-sm active:scale-95 shadow-md">삭제</button>
             </div>
         </div>
     </div>
 
     <script>
-        const apiKey = "AIzaSyAr7wmH50WZb9aHTDWbBiaArBsSTDbQ6xs"; // 깃허브 사용 시 따옴표 사이에 키를 입력하세요.
+        // [중요] 깃허브 사용 시 아래 따옴표 안에 키를 입력하세요.
+        const apiKey = "AIzaSyAEvKy8bOz_JHzuOE7rabJ1xeoQsu1DPm8"; 
         let historyData = [];
 
         window.onload = function() {
@@ -290,10 +291,10 @@
                 }
             } catch (err) {
                 console.error(err);
-                showToast("데이터 추출 실패. 선명하게 찍어주세요.");
+                showToast("데이터 추출 실패. 선명하게 다시 찍어주세요.");
                 document.getElementById('aiLoading').classList.add('hidden');
             } finally {
-                // 4. 어떤 상황에서도 버튼 재활성화 (먹통 방지)
+                // 어떤 상황에서도 버튼 재활성화 (먹통 방지)
                 document.getElementById('photoBtn').disabled = false;
                 input.value = ''; 
             }
@@ -322,7 +323,7 @@
         }
 
         async function callGeminiOCR(base64Data) {
-            const prompt = "Analyze the image and extract the cutting table data. Find columns: Width(옆), Height(높이), Quantity(수량). Convert meter (e.g. 1.22) to cm (122). Respond ONLY in PURE JSON: {'rows': [{'w': 100, 'h': 200, 'q': 5}]}. No markdown tags.";
+            const prompt = "Extract columns '가로(옆)', '세로(높이)', '발주수량' from the table in image. Convert meters to cm. Respond in pure JSON format ONLY: {'rows': [{'w': 100, 'h': 200, 'q': 5}]}. No conversation.";
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             for (let i = 0; i < 3; i++) {
@@ -335,7 +336,7 @@
                     if (!resp.ok) throw new Error('API Fail');
                     const result = await resp.json();
                     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    // AI의 답변에서 JSON만 골라내는 정규식
+                    // AI의 답변에서 JSON 블록만 자석처럼 골라내는 정규식
                     const match = text.match(/\{[\s\S]*\}/);
                     return JSON.parse(match[0]);
                 } catch (e) {
@@ -414,14 +415,9 @@
                 const isRec = isGoal && (totalCutCount === minCuts);
                 
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL * i));
-                let centers = []; for(let i=0; i<n; i++) centers.push(fmtSpecial((PULL/2) + (PULL * i)));
-                let thirds = []; for(let i=0; i<n; i++) { let b = PULL * i; thirds.push(Math.round(b + PULL/3)); thirds.push(Math.round(b + PULL*2/3)); }
-                let s4 = []; for(let i=0; i<n; i++) { let b = PULL * i; s4.push(fmtSpecial(b + PULL/4)); s4.push(fmtSpecial(b + PULL*3/4)); }
-                let dWeb = []; if (!isNaN(P1_val) && P1_val <= PULL) dWeb.push(P1_val); if (!isNaN(P2_val) && P2_val <= PULL) dWeb.push(P2_val);
-                let pts = []; if (dWeb.length > 0) { for(let i=0; i<n; i++) { let b = PULL * i; dWeb.forEach(vp => pts.push(fmtSpecial(b + vp))); } pts.sort((a,b)=>a-b); }
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
-                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} ${totalCutCount}컷</span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? floorB+'회' : n+'장'}</span>${isGoal && remB > 0 ? `<span class="text-2xl font-black text-blue-600">+ ${remB}장 더</span>` : ''}</div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-none font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right ${pullLabel === '세로' ? 'text-yellow-400' : 'text-slate-400'} mr-2 text-[10px]"></i> ${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div><div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-violet-500"><span class="font-black text-[11px] uppercase tracking-widest">Centers</span><i class="fa-solid fa-chevron-down text-[10px] chevron-icon"></i></button><div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${centers.map(c => `<span class="data-chip text-violet-700" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div><div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-emerald-600"><span class="font-black text-[11px] uppercase tracking-widest">3-Parts</span><i class="fa-solid fa-chevron-down text-[10px] chevron-icon"></i></button><div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${thirds.map(t => `<span class="data-chip text-emerald-900" ${getChipStyle(t)}>${t}</span>`).join('')}</div></div></div><div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-blue-500"><span class="font-black text-[11px] uppercase tracking-widest">4-Parts</span><i class="fa-solid fa-chevron-down text-[10px] chevron-icon"></i></button><div class="hidden pt-2"><div class="grid grid-cols-4 gap-2.5">${s4.map(p => `<span class="data-chip text-blue-600" ${getChipStyle(p)}>${p}</span>`).join('')}</div></div></div><div><button onclick="toggleCardMarking(this)" class="w-full flex items-center justify-between py-1.5 text-amber-600"><span class="font-black text-[11px] uppercase tracking-widest">Webbing</span><i class="fa-solid fa-chevron-down text-[10px] chevron-icon"></i></button><div class="hidden pt-2">${pts.length > 0 ? `<div class="grid grid-cols-4 gap-2.5">${pts.map(p => `<span class="data-chip text-amber-900" ${getChipStyle(p)}>${p}</span>`).join('')}</div>` : ''}</div></div></div></div>`;
+                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} ${totalCutCount}컷</span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? floorB+'회' : n+'장'}</span>${isGoal && remB > 0 ? `<span class="text-2xl font-black text-blue-600">+ ${remB}장 더</span>` : ''}</div><div class="${pullLabel === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-none font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right ${pullLabel === '세로' ? 'text-yellow-400' : 'text-slate-400'} mr-2 text-[10px]"></i> ${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div></div>`;
                 container.appendChild(card);
                 
                 // 1회 끝장 로직: 수량이 완성되면 다음 카드 생략
@@ -433,22 +429,15 @@
 
         // --- UI 기본 기능 ---
         function toggleHistory() { const list = document.getElementById('historyList'); const icon = document.getElementById('historyIcon'); const isHidden = list.classList.toggle('hidden'); icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)'; haptic(15); }
-        function toggleCardMarking(btn) { const content = btn.nextElementSibling; const icon = btn.querySelector('.chevron-icon'); const isHidden = content.classList.toggle('hidden'); icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)'; haptic(10); }
         function saveToLocal() { localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
         function renderHistory() {
             const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-sm">Empty History</p>'; return; }
-            list.innerHTML = historyData.map(data => {
-                const badgeClass = data.pull_label === '세로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500';
-                return `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 history-card w-full" onclick="fillFormFromHistory(${data.id})"><div class="flex items-start justify-between"><div class="flex-1"><div class="text-3xl font-black text-slate-900 leading-none mb-3 tabular-nums">${data.w_in} <small class="text-slate-300 font-light">X</small> ${data.h_in} <span class="text-blue-600 text-xl font-black ml-2">폭 ${data.r_in || '-'}</span></div><div class="flex gap-2"><span class="${badgeClass} text-[12px] px-2.5 py-1 rounded-none font-black uppercase">${data.pull_label || '-'} 당김</span><span class="text-slate-600 text-[12px] font-black uppercase">잔여 ${data.q_left || 0}장</span></div></div><button onclick="confirmDeleteIndividual(event, ${data.id})" class="text-slate-300 hover:text-red-500 p-1"><i class="fa-solid fa-circle-xmark text-4xl"></i></button></div></div>`;
-            }).join('');
+            list.innerHTML = historyData.map(data => `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 history-card w-full" onclick="fillFormFromHistory(${data.id})"><div class="flex items-start justify-between"><div class="flex-1"><div class="text-3xl font-black text-slate-900 leading-none mb-3 tabular-nums">${data.w_in} <small class="text-slate-300 font-light">X</small> ${data.h_in} <span class="text-blue-600 text-xl font-black ml-2">폭 ${data.r_in || '-'}</span></div><div class="flex gap-2"><span class="bg-slate-100 text-slate-500 text-[12px] px-2.5 py-1 rounded-none font-black uppercase">${data.pull_label || '-'} 당김</span><span class="text-slate-600 text-[12px] font-black uppercase">잔여 ${data.q_left || 0}장</span></div></div><button onclick="confirmDeleteIndividual(event, ${data.id})" class="text-slate-300 hover:text-red-500 p-1"><i class="fa-solid fa-circle-xmark text-4xl"></i></button></div></div>`).join('');
         }
         function fillFormFromHistory(id) {
             const data = historyData.find(d => d.id === id); if (!data) return; haptic(25);
-            document.getElementById('w_in').value = data.w_in;
-            document.getElementById('h_in').value = data.h_in;
-            document.getElementById('r_in').value = data.r_in || '';
-            document.getElementById('q_goal').value = data.q_goal || '';
-            calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('w_in').value = data.w_in; document.getElementById('h_in').value = data.h_in; document.getElementById('r_in').value = data.r_in || '';
+            document.getElementById('q_goal').value = data.q_goal || ''; calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
         function confirmDeleteIndividual(event, id) { event.stopPropagation(); haptic(10); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-trash-can text-red-500"></i>'; document.getElementById('modalTitle').innerText = '항목 삭제'; confirmBtn.innerText = '삭제'; confirmBtn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-none text-sm'; confirmBtn.onclick = () => { historyData = historyData.filter(d => d.id !== id); saveToLocal(); modal.style.display = 'none'; showToast("삭제되었습니다."); }; modal.style.display = 'flex'; }
