@@ -31,7 +31,7 @@
             max-width: 380px; 
         }
 
-        /* 입력창 디자인: 하단 1px 테두리만 유지, 상단/좌우 제거 */
+        /* 입력창 디자인: 하단 1px 테두리만 유지 */
         input[type="number"], input[type="text"] {
             -webkit-appearance: none;
             border-bottom: 1px solid #d1d5db;
@@ -71,7 +71,7 @@
             outline: none;
         }
 
-        /* 라벨 디자인: 하단 테두리만 유지, 상단/좌우 제거 */
+        /* 라벨 디자인 */
         .grid-label {
             display: flex;
             align-items: center;
@@ -82,9 +82,6 @@
             font-weight: 800;
             font-size: 13px;
             border-bottom: 1px solid currentColor;
-            border-top: none;
-            border-left: none;
-            border-right: none;
             cursor: pointer;
             user-select: none;
             transition: all 0.2s;
@@ -144,11 +141,10 @@
         }
         #toast.show { opacity: 1; transform: translate(-50%, -20px); }
 
-        /* API 키 설정 창 */
+        /* 설정창 및 AI 리스트 영역 애니메이션 */
         #keyConfigArea { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
         #keyConfigArea.open { max-height: 150px; padding-bottom: 1rem; }
 
-        /* AI 결과 리스트 (인라인 창) */
         #aiResultBox { transition: all 0.3s ease; overflow: hidden; max-height: 0; }
         #aiResultBox.open { max-height: 600px; padding-bottom: 1.5rem; }
     </style>
@@ -189,7 +185,7 @@
             </div>
         </div>
 
-        <!-- AI 도구함 (타이틀과 입력섹션 사이) -->
+        <!-- AI 도구함 -->
         <section id="aiToolbox" class="bg-slate-50 border-x border-slate-100 px-3 pt-4">
             <div class="flex gap-2 mb-2">
                 <button onclick="document.getElementById('aiUpload').click()" class="flex-1 bg-white border-2 border-indigo-100 text-indigo-600 h-12 rounded-xl flex items-center justify-center gap-2 font-black text-sm active:scale-95 transition-all shadow-sm">
@@ -204,16 +200,13 @@
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-tighter">분석된 리스트 (터치 시 입력창으로 이동)</span>
                     <button onclick="closeAIResultBox()" class="text-slate-300 text-xs"><i class="fa-solid fa-circle-xmark"></i></button>
                 </div>
-                <div id="aiInlineList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    <!-- AI 인식 결과가 여기에 생성됨 -->
-                </div>
+                <div id="aiInlineList" class="space-y-2 max-h-[300px] overflow-y-auto pr-1"></div>
             </div>
         </section>
 
         <!-- 입력 섹션 (원본 디자인 복구) -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
-                
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
                 <input type="number" id="p1_in" onkeydown="handleEnter(event)" class="border-amber-100">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p2_in'); i.value=''; i.focus(); haptic(10);">웨빙2</label>
@@ -588,7 +581,8 @@
                 doneTotal = (parseFloat(document.getElementById('q_done1').value) || 0) + (parseFloat(document.getElementById('q_done2').value) || 0) + (parseFloat(document.getElementById('q_done3').value) || 0);
                 Q = goalN - doneTotal;
                 if (Q < 0) { showError("완료 수량이 목표를 초과했습니다."); return; }
-            }
+            } else { Q = 1; }
+
             const wasteW = (R < W) ? 99999 : (R - W); const wasteH = (R < H) ? 99999 : (R - H);
             if (wasteW === 99999 && wasteH === 99999) { showError("폭 부족으로 불가."); return; }
             let FIX, PULL, finalWaste, fixLabel, pullLabel;
@@ -597,6 +591,9 @@
             
             let minCuts = 999999;
             for (let n = 2; n <= 10; n++) {
+                // ✔️ 목표가 설정된 경우, 잔여 수량보다 많은 장수씩 자르는 계획은 제외
+                if (isGoal && Q > 0 && n > Q) break;
+
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) continue; 
                 let curB = isGoal ? Math.ceil(Q / n) : 1;
                 let totalCutCount = n + curB + (finalWaste > 0 ? 1 : 0);
@@ -633,6 +630,9 @@
             
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
             for (let n = 2; n <= 10; n++) {
+                // ✔️ 카드 생성 시에도 필터 적용: 잔여 수량보다 많은 n은 패스
+                if (isGoal && Q > 0 && n > Q) break;
+
                 let totalLen = (PULL * n) + 2; if (totalLen > 1200) break;
                 let floorB = isGoal ? Math.floor(Q / n) : 1; let remB = isGoal ? (Q % n) : 0;
                 let curB_for_cut = isGoal ? Math.ceil(Q / n) : 1; 
