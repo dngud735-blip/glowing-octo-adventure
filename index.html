@@ -155,12 +155,10 @@
     <div id="toast"></div>
 
     <div class="app-container">
-        <!-- 타이틀 바 -->
         <div class="bg-slate-900 text-white flex items-center justify-center font-black uppercase text-[11px] tracking-[0.25em] h-[36px] mb-0 rounded-t-[24px] shadow-lg border-b border-slate-700">
             <span class="leading-none transform translate-y-[1px]">PVC Mesh Cutting Calculator</span>
         </div>
 
-        <!-- 사진 분석 섹션 -->
         <div class="bg-white border-x border-slate-100 p-3 flex flex-col gap-2 shadow-sm">
             <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
             <button id="photoBtn" onclick="document.getElementById('photoInput').click(); haptic(15);" class="w-full h-12 bg-blue-600 text-white flex items-center justify-center gap-3 font-black rounded-none shadow-md active:scale-95 transition-all text-sm uppercase">
@@ -168,13 +166,11 @@
                 재단데이터 분석하기
             </button>
 
-            <!-- 분석 로딩 -->
             <div id="aiLoading" class="hidden flex items-center justify-center p-4 bg-slate-50 rounded-none border border-dashed border-blue-200">
                 <span class="loader mr-3"></span>
                 <span id="loadingText" class="text-sm font-bold text-slate-600">데이터를 분석 중입니다...</span>
             </div>
 
-            <!-- 추출 리스트 -->
             <div id="aiResultArea" class="hidden animate-in">
                 <div class="flex items-center justify-between px-1 mb-2">
                     <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest leading-none">데이터 선택 (터치 시 입력)</span>
@@ -184,7 +180,6 @@
             </div>
         </div>
 
-        <!-- 메인 입력 섹션 -->
         <main class="bg-white rounded-b-[24px] shadow-md p-3 border border-slate-100 border-t-0 flex flex-col gap-y-2.5">
             <div class="grid grid-cols-4 gap-y-2.5 gap-x-2.5 items-center">
                 <label class="grid-label text-amber-600 border-amber-200 bg-amber-50/30" onclick="const i=document.getElementById('p1_in'); i.value=''; i.focus(); haptic(10);">웨빙1</label>
@@ -220,7 +215,6 @@
             <div id="errorBox" class="hidden p-2 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-red-500"></i><span id="errorMsg" class="text-xs font-bold text-red-700"></span></div>
         </main>
 
-        <!-- 히스토리 영역 -->
         <footer id="historySection" class="w-full">
             <div class="flex items-center justify-between px-1 cursor-pointer py-4" onclick="toggleHistory()">
                 <h2 class="font-black text-slate-800 text-xl uppercase tracking-widest flex items-center gap-3"><i id="historyIcon" class="fa-solid fa-clock-rotate-left text-blue-500 transition-transform"></i> History</h2>
@@ -229,7 +223,6 @@
             <div id="historyList" class="hidden space-y-4 px-1 pb-4"></div>
         </footer>
 
-        <!-- 결과 영역 -->
         <div id="resultArea" class="hidden space-y-[40px] w-full pt-6">
             <section id="summaryCardContainer" class="animate-in">
                 <div class="bg-white border border-slate-100 rounded-[24px] overflow-hidden shadow-md">
@@ -241,7 +234,6 @@
         </div>
     </div>
 
-    <!-- 삭제 모달 -->
     <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden items-center justify-center p-6 backdrop-blur-sm">
         <div class="bg-white w-full max-w-xs rounded-[28px] p-6 shadow-2xl text-center border-0">
             <div id="modalIcon" class="mb-4 text-4xl text-red-500"><i class="fa-solid fa-trash-can"></i></div>
@@ -255,7 +247,7 @@
     </div>
 
     <script>
-        // curl 예시에 적어주신 최신 키를 바로 적용했습니다.
+        // 발급받으신 API 키를 아래 따옴표 안에 넣으세요.
         const apiKey = "AIzaSyAr7wmH50WZb9aHTDWbBiaArBsSTDbQ6xs"; 
         let historyData = [];
 
@@ -268,10 +260,9 @@
         function showToast(msg) {
             const toast = document.getElementById('toast');
             toast.innerText = msg; toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
         }
 
-        // --- 분석 엔진 로직 (공식 가이드 방식 완벽 이식) ---
         async function handlePhotoUpload(input) {
             if (!input.files || !input.files[0]) return;
             const file = input.files[0];
@@ -279,23 +270,22 @@
             const loadingArea = document.getElementById('aiLoading');
             const loadingText = document.getElementById('loadingText');
             loadingArea.classList.remove('hidden');
-            loadingText.innerText = "이미지 최적화 중...";
+            loadingText.innerText = "이미지 처리 중...";
             document.getElementById('aiResultArea').classList.add('hidden');
             document.getElementById('photoBtn').disabled = true;
 
             try {
                 const base64Image = await optimizeImage(file);
-                loadingText.innerText = "AI 서버에 전송 중...";
-                
+                loadingText.innerText = "AI 분석 요청 중...";
                 const response = await callGeminiOfficial(base64Image);
                 if (response && response.rows) {
                     renderAiList(response.rows);
                 } else {
-                    throw new Error("데이터를 찾을 수 없습니다.");
+                    throw new Error("데이터 파싱 실패");
                 }
             } catch (err) {
-                console.error("Gemini API Error Detail:", err);
-                showToast("분석 실패: " + err.message);
+                console.error("Gemini API Error:", err);
+                showToast("실패: " + (err.message || "분석 오류"));
                 loadingArea.classList.add('hidden');
             } finally {
                 document.getElementById('photoBtn').disabled = false;
@@ -304,40 +294,33 @@
         }
 
         async function callGeminiOfficial(base64Data) {
-            // curl 명령어로 주신 모델 규격에 맞춥니다.
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent`;
-            const systemPrompt = "당신은 재단 데이터 추출 전문가입니다. 이미지의 표에서 '가로(옆)', '세로(높이)', '발주수량' 숫자만 추출하세요. 1.22 같은 미터 단위는 100을 곱해 cm 정수로 변환하세요. 응답은 반드시 JSON 형식으로만 하세요: {\"rows\": [{\"w\": 가로, \"h\": 세로, \"q\": 수량}]}";
+            const systemPrompt = "Extract cutting table data. Find columns: Width(옆), Height(높이), Quantity(발주수량). Convert meters to cm. Response must be strictly valid JSON format: {\"rows\": [{\"w\": number, \"h\": number, \"q\": number}]}";
 
-            const delays = [1000, 2000, 4000];
-            for (let i = 0; i < delays.length; i++) {
-                try {
-                    const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'X-goog-api-key': apiKey // curl 방식 인증 헤더 사용
-                        },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: "Extract table data." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
-                            systemInstruction: { parts: [{ text: systemPrompt }] },
-                            generationConfig: { responseMimeType: "application/json" }
-                        })
-                    });
-
-                    if (!resp.ok) {
-                        const errorData = await resp.json();
-                        throw new Error(errorData.error?.message || `HTTP ${resp.status}`);
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-goog-api-key': apiKey },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: "Extract table data." }, { inlineData: { mimeType: "image/jpeg", data: base64Data } }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { 
+                        responseMimeType: "application/json" // 공식 문서 권장: JSON 모드 강제
                     }
+                })
+            });
 
-                    const result = await resp.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!text) throw new Error("분석 내용 없음");
-                    return JSON.parse(text);
-                } catch (e) {
-                    if (i === delays.length - 1) throw e;
-                    await new Promise(r => setTimeout(r, delays[i]));
-                }
+            if (!resp.ok) {
+                const errorData = await resp.json();
+                throw new Error(errorData.error?.message || "서버 응답 없음");
             }
+
+            const result = await resp.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error("분석 내용이 비어있습니다.");
+            
+            // AI가 답변에 포함할 수 있는 마크다운 기호 제거
+            const cleanText = text.replace(/```json|```/g, "").trim();
+            return JSON.parse(cleanText);
         }
 
         function optimizeImage(file) {
@@ -354,7 +337,6 @@
                         canvas.width = w; canvas.height = h;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, w, h);
-                        // base64에서 헤더 제외 순수 데이터만 추출
                         resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
                     };
                     img.src = e.target.result;
@@ -388,13 +370,12 @@
 
         function closeAiResult() { document.getElementById('aiResultArea').classList.add('hidden'); }
 
-        // --- 계산 로직 (1회 끝장 포함) ---
         function calculate(isFromHistory = false) {
             haptic(30); hideError(); if(document.activeElement) document.activeElement.blur();
-            const wIn = document.getElementById('w_in').value, hIn = document.getElementById('h_in').value;
+            const p1Raw = document.getElementById('p1_in').value, p2Raw = document.getElementById('p2_in').value;
+            const rIn = document.getElementById('r_in').value, wIn = document.getElementById('w_in').value, hIn = document.getElementById('h_in').value, goalIn = document.getElementById('q_goal').value; 
             if (!wIn || !hIn) return;
-            const W = parseFloat(wIn), H = parseFloat(hIn), R = document.getElementById('r_in').value ? parseFloat(document.getElementById('r_in').value) : H;
-            const goalIn = document.getElementById('q_goal').value; 
+            const W = parseFloat(wIn), H = parseFloat(hIn), R = rIn ? parseFloat(rIn) : H, P1_val = parseFloat(p1Raw), P2_val = parseFloat(p2Raw);
             const isGoal = (goalIn && goalIn.trim() !== "");
             let goalN = 0, doneTotal = 0, Q = 0;
             if (isGoal) {
@@ -418,6 +399,8 @@
             
             document.getElementById('resultArea').classList.remove('hidden');
             document.getElementById('summaryCardHeader').innerHTML = `<span class="text-3xl font-black text-white leading-none pl-1">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span>`;
+            const masterWebbingStr = [!isNaN(P1_val) && P1_val <= FIX ? fmt(P1_val) : null, !isNaN(P2_val) && P2_val <= FIX ? fmt(P2_val) : null].filter(v => v !== null).join(' / ') || '-';
+            
             document.getElementById('summaryList').innerHTML = `<div class="bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between"><span class="text-[12px] font-black text-slate-400 uppercase tracking-widest leading-none">Trim</span><span class="text-2xl font-black text-slate-800 leading-none">폭 ${fmt(R)} - ${fmt(FIX)} = <span class="text-red-500">${fmt(finalWaste)}cm</span></span></div><div class="grid grid-cols-2 gap-2 mt-2"><div class="bg-violet-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-violet-400 uppercase block mb-0.5 leading-none">CENTER</span><span class="text-xl font-black text-violet-700 leading-none tabular-nums">${fmtSpecial(FIX/2)}</span></div><div class="bg-emerald-50/50 p-2 rounded-xl text-center"><span class="text-[13px] font-black text-emerald-600 uppercase block mb-0.5 leading-none">3-PART</span><span class="text-xl font-black text-emerald-900 leading-none tabular-nums">${Math.round(FIX/3)} / ${Math.round(FIX*2/3)}</span></div></div>`;
             
             const container = document.getElementById('cardsContainer'); container.innerHTML = '';
@@ -428,7 +411,7 @@
                 let cuts = []; for(let i=1; i<=n; i++) cuts.push(fmt(PULL * i));
 
                 const card = document.createElement('div'); card.className = `w-full bg-white border rounded-[24px] overflow-hidden animate-in shadow-md ${isRec ? 'ring-2 ring-yellow-400 border-transparent' : 'border-slate-100'}`;
-                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400"></i><i class="fa-solid fa-cut text-yellow-400" style="margin-left:4px;"></i>' : '<i class="fa-solid fa-cut text-yellow-400"></i>'} ${totalCutCount}컷</span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? Math.floor(Q / n)+'회' : n+'장'}</span></div><div class="${pullLabel === '가로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-none font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right ${pullLabel === '가로' ? 'text-yellow-400' : 'text-slate-400'} mr-2 text-[10px]"></i> ${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div></div>`;
+                card.innerHTML = `<div class="px-5 py-3 bg-slate-900 flex items-center justify-between border-b border-transparent"><div class="flex items-center"><span class="text-3xl font-black text-white leading-none">${fmt(W)} <small class="text-slate-500 mx-0.5">X</small> ${fmt(H)}</span></div><div class="flex items-center gap-3">${isRec ? `<i class="fa-solid fa-crown text-yellow-400 text-2xl"></i>` : ''}<span class="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg font-black text-[17px] uppercase tracking-tighter">${finalWaste > 0 ? '<i class="fa-solid fa-cut text-yellow-400 mr-1"></i><i class="fa-solid fa-cut mr-1 text-yellow-400"></i>' : '<i class="fa-solid fa-cut mr-1 text-yellow-400"></i>'} ${totalCutCount}컷</span></div></div><div class="px-5 pt-4 pb-3 bg-white"><div class="flex items-center justify-between"><div class="flex items-baseline gap-2 leading-none"><span class="text-4xl font-black text-slate-900 tabular-nums">${isGoal ? Math.floor(Q / n)+'회' : n+'장'}</span></div><div class="${pullLabel === '가로' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'} text-[13px] px-3 py-1.5 rounded-none font-black uppercase tracking-tight border-2 transition-all"><i class="fa-solid fa-arrows-left-right ${pullLabel === '가로' ? 'text-yellow-400' : 'text-slate-400'} mr-2 text-[10px]"></i> ${pullLabel} 당김</div></div><div class="flex items-center justify-between gap-1 mt-4"><span class="bg-blue-50 text-blue-700 text-[16px] px-4 py-2 rounded-lg font-black uppercase border-2 border-blue-100 shadow-sm whitespace-nowrap leading-none flex items-center text-center">1회 ${n}장</span>${isGoal ? `<div class="bg-slate-100 text-slate-700 px-3.5 py-2 rounded-lg font-black border-2 border-slate-200 shadow-sm flex-1 ml-2 text-center truncate"><span class="text-[14px] uppercase tracking-tighter block leading-none"><span class="text-slate-500 font-bold mr-0.5">목표</span><span class="text-slate-900">${goalN}</span> <span class="mx-0.5 text-slate-300">-</span><span class="text-slate-500 font-bold mr-0.5">완료</span><span class="text-slate-900">${doneTotal}</span> <span class="mx-0.5 text-slate-300">=</span><span class="text-blue-500 font-bold mr-0.5">잔여</span><span class="text-blue-600">${Q}</span></span></div>` : ''}</div></div><div class="px-5 py-2 space-y-2"><div class="bg-blue-600/5 border-2 border-blue-600/10 p-4 rounded-2xl flex items-center gap-4 shadow-sm"><div class="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center text-xl shadow-md"><i class="fa-solid fa-ruler-combined"></i></div><p class="text-5xl font-black leading-none flex-1 text-center"><span class="text-blue-600 tabular-nums" style="letter-spacing: 1px;">${fmt(totalLen)}</span><span class="text-slate-900 text-3xl ml-1">cm</span></p></div><div class="space-y-2 pt-2 pb-5"><div class="flex flex-col gap-2 mb-2"><span class="text-rose-600 font-black text-[13px] uppercase flex items-center gap-2"><i class="fa-solid fa-cut text-[11px]"></i> Cuts</span><div class="grid grid-cols-4 gap-2.5">${cuts.map(c => `<span class="data-chip text-rose-600" ${getChipStyle(c)}>${c}</span>`).join('')}</div></div></div></div>`;
                 container.appendChild(card);
                 if (isGoal && n >= Q) break;
             }
@@ -436,16 +419,20 @@
             document.body.appendChild(document.getElementById('historySection'));
         }
 
-        // --- 기타 UI 제어 ---
-        function toggleHistory() { const list = document.getElementById('historyList'); const isHidden = list.classList.toggle('hidden'); haptic(15); }
+        function toggleHistory() { const list = document.getElementById('historyList'); const icon = document.getElementById('historyIcon'); const isHidden = list.classList.toggle('hidden'); icon.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(180deg)'; haptic(15); }
         function saveToLocal() { localStorage.setItem('pvc_mesh_calculator_history', JSON.stringify(historyData)); renderHistory(); }
         function renderHistory() {
-            const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold">Empty</p>'; return; }
-            list.innerHTML = historyData.map(d => `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 mb-3" onclick="fillFormFromHistory(${d.id})"><div class="text-2xl font-black text-slate-900 tabular-nums">${d.w_in} × ${d.h_in} <span class="text-blue-600 text-lg ml-2">잔여 ${d.q_left}</span></div></div>`).join('');
+            const list = document.getElementById('historyList'); if (historyData.length === 0) { list.innerHTML = '<p class="p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-sm">Empty History</p>'; return; }
+            list.innerHTML = historyData.map(data => `<div class="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 mb-3" onclick="fillFormFromHistory(${data.id})"><div class="flex items-start justify-between"><div class="flex-1"><div class="text-3xl font-black text-slate-900 leading-none mb-3 tabular-nums">${data.w_in} <small class="text-slate-300 font-light">X</small> ${data.h_in}</div><div class="text-slate-600 text-[12px] font-black uppercase">잔여 ${data.q_left || 0}장</div></div><button onclick="confirmDeleteIndividual(event, ${data.id})" class="text-slate-300 hover:text-red-500 p-1"><i class="fa-solid fa-circle-xmark text-4xl"></i></button></div></div>`).join('');
         }
-        function fillFormFromHistory(id) { const d = historyData.find(x => x.id === id); if (!d) return; haptic(25); document.getElementById('w_in').value = d.w_in; document.getElementById('h_in').value = d.h_in; calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-        function confirmClearAll() { document.getElementById('deleteModal').style.display='flex'; document.getElementById('confirmDeleteBtn').onclick = () => { historyData = []; saveToLocal(); document.getElementById('deleteModal').style.display='none'; showToast("초기화됨"); }; }
-        function closeDeleteModal() { document.getElementById('deleteModal').style.display='none'; }
+        function fillFormFromHistory(id) {
+            const data = historyData.find(d => d.id === id); if (!data) return; haptic(25);
+            document.getElementById('w_in').value = data.w_in; document.getElementById('h_in').value = data.h_in;
+            calculate(true); window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
+        function confirmDeleteIndividual(event, id) { event.stopPropagation(); haptic(10); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-trash-can text-red-500"></i>'; document.getElementById('modalTitle').innerText = '삭제'; confirmBtn.innerText = '삭제'; confirmBtn.className = 'flex-1 py-3 bg-red-500 text-white font-bold rounded-none text-sm'; confirmBtn.onclick = () => { historyData = historyData.filter(d => d.id !== id); saveToLocal(); modal.style.display = 'none'; showToast("삭제되었습니다."); }; modal.style.display = 'flex'; }
+        function confirmClearAll(event) { if(event) event.stopPropagation(); haptic(20); const modal = document.getElementById('deleteModal'); const confirmBtn = document.getElementById('confirmDeleteBtn'); document.getElementById('modalIcon').innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i>'; document.getElementById('modalTitle').innerText = '전체 삭제'; confirmBtn.innerText = '전체 삭제'; confirmBtn.className = 'flex-1 py-3 bg-slate-900 text-white font-bold rounded-none text-sm'; confirmBtn.onclick = () => { historyData = []; saveToLocal(); modal.style.display = 'none'; showToast("초기화되었습니다."); }; modal.style.display = 'flex'; }
         function handleEnter(event, isLast = false) { if (event.key === 'Enter') { calculate(); if (isLast) document.activeElement.blur(); } }
         function fmt(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
         function fmtSpecial(num) { return (num % 1 === 0) ? num : parseFloat(num.toFixed(1)); }
